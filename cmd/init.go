@@ -32,10 +32,10 @@ var initCmd = &cobra.Command{
 	Short: "init short description",
 	Long: `init
                 long
-                description`,
+				description`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: Get query from CLI input
-		query := "org:Clever"
+		query := args[0]
 		output, err := initialize.Initialize(initialize.Input{
 			Query:   query,
 			WorkDir: workDir,
