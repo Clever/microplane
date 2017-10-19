@@ -21,7 +21,9 @@ var initCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		target := "target-" + strconv.Itoa(int(time.Now().Unix()))
 
-		repos, err := initialize.GithubSearch("query")
+		// TODO: Remove this example query
+		query := "org:Clever"
+		repos, err := initialize.GithubSearch(query)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -33,7 +35,9 @@ var initCmd = &cobra.Command{
 		}
 
 		path := targetDir + "init.json"
-		err = initialize.WriteInitJSON(repos, path)
+		err = initialize.WriteInitJSON(initialize.Output{
+			Repos: repos,
+		}, path)
 		if err != nil {
 			log.Fatal(err)
 		}
