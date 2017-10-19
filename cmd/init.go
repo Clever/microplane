@@ -2,6 +2,12 @@ package cmd
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/Clever/microplane/initialize"
 
 	"github.com/spf13/cobra"
 )
@@ -13,6 +19,25 @@ var initCmd = &cobra.Command{
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init")
+		target := "target-" + strconv.Itoa(int(time.Now().Unix()))
+
+		repos, err := initialize.GithubSearch("query")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		targetDir := "./" + target + "/"
+		err = os.Mkdir(targetDir, 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		path := targetDir + "init.json"
+		err = initialize.WriteInitJSON(repos, path)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println(target)
 	},
 }
