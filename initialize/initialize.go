@@ -2,10 +2,10 @@ package initialize
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -16,16 +16,42 @@ type Repo struct {
 	CloneURL string
 }
 
-type Output struct {
-	Repos []Repo
+type Input struct {
+	WorkDir string
+	Query   string
 }
 
-// GithubSearch queries github and returns a list of matching repos
+type Output struct {
+	Target string
+	Repos  []Repo
+}
+
+func Initialize(input Input) (Output, error) {
+	target := "target-" + strconv.Itoa(int(time.Now().Unix()))
+
+	// Create Target dir
+	err := os.Mkdir(input.WorkDir+"/"+target+"/", 0755)
+	if err != nil {
+		return Output{}, err
+	}
+
+	repos, err := githubSearch(input.Query)
+	if err != nil {
+		return Output{}, err
+	}
+
+	return Output{
+		Target: target,
+		Repos:  repos,
+	}, nil
+}
+
+// githubSearch queries github and returns a list of matching repos
 //
 // Search Syntax:
 // https://help.github.com/articles/searching-repositories/#search-within-a-users-or-organizations-repositories
 // https://help.github.com/articles/understanding-the-search-syntax/
-func GithubSearch(query string) ([]Repo, error) {
+func githubSearch(query string) ([]Repo, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
@@ -68,19 +94,4 @@ func GithubSearch(query string) ([]Repo, error) {
 	}
 
 	return repos, nil
-}
-
-// WriteInitJSON writes the output of the `init` command into a JSON file, for use by later commands
-func WriteInitJSON(output Output, path string) error {
-	b, err := json.MarshalIndent(output, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
