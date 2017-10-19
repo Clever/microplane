@@ -19,7 +19,12 @@ var RootCmd = &cobra.Command{
 
 func init() {
 	RootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
-	RootCmd.AddCommand(cloneCmd, initCmd)
+	RootCmd.AddCommand(cloneCmd)
+	RootCmd.AddCommand(initCmd)
+	RootCmd.AddCommand(mergeCmd)
+	RootCmd.AddCommand(planCmd)
+	RootCmd.AddCommand(pushCmd)
+	RootCmd.AddCommand(statusCmd)
 }
 
 func Execute() error {

@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "init short description",
-	Long: `init
+var planCmd = &cobra.Command{
+	Use:   "plan",
+	Short: "plan short description",
+	Long: `plan
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init")
+		fmt.Println("plan")
 	},
 }

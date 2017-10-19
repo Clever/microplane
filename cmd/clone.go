@@ -7,12 +7,12 @@ import (
 )
 
 var cloneCmd = &cobra.Command{
-	Use:   "mp clone",
+	Use:   "clone",
 	Short: "clone short description",
 	Long: `clone
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Clone")
+		fmt.Println("clone")
 	},
 }

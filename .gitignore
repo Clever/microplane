@@ -1,1 +1,5 @@
+# go vendoring
 vendor/
+
+# binary
+microplane
