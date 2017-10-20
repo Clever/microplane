@@ -17,10 +17,7 @@ import (
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "status short description",
-	Long: `status
-                long
-                description`,
+	Short: "Status shows a workflow's progress",
 	Run: func(cmd *cobra.Command, args []string) {
 		// find files and folders to explain the status of each repo
 		initPath := initOutputPath()

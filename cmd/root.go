@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,14 +11,8 @@ import (
 var workDir string
 
 var rootCmd = &cobra.Command{
-	Use:   "microplane",
-	Short: "microplane",
-	Long: `Microplane
-                long
-                description`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Microplane RootCmd")
-	},
+	Use:   "mp",
+	Short: "Microplane makes git changes across many repos",
 }
 
 func init() {

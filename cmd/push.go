@@ -21,10 +21,7 @@ func pushOutputPath(repo string) string {
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
-	Short: "push short description",
-	Long: `push
-                long
-                description`,
+	Short: "Push planned changes",
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(initOutputPath(), &initOutput); err != nil {

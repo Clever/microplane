@@ -38,10 +38,7 @@ func cloneOutputPath(repo string) string {
 
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
-	Short: "clone short description",
-	Long: `clone
-                long
-                description`,
+	Short: "Clone all repos targeted by init",
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(initOutputPath(), &initOutput); err != nil {

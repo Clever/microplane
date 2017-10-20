@@ -23,10 +23,7 @@ func mergeOutputPath(repo string) string {
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
-	Short: "merge short description",
-	Long: `merge
-                long
-                description`,
+	Short: "Merge pushed changes",
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(initOutputPath(), &initOutput); err != nil {

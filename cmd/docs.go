@@ -10,8 +10,7 @@ import (
 
 var docsCmd = &cobra.Command{
 	Use:   "docs [path]",
-	Short: "Generates docs",
-	Long:  "Generates markdown docs for each command.",
+	Short: "Generates markdown docs for each command",
 	Args:  cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		path := "docs/"

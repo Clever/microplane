@@ -25,10 +25,7 @@ var planFlagMessage string
 var planCmd = &cobra.Command{
 	Use:   "plan [cmd] [args...]",
 	Args:  cobra.MinimumNArgs(1),
-	Short: "plan short description",
-	Long: `plan
-                long
-				description`,
+	Short: "Plan changes by running a command against cloned repos",
 	Run: func(cmd *cobra.Command, args []string) {
 		changeCmd := args[0]
 		var changeCmdArgs []string
