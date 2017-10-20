@@ -185,10 +185,13 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, file := range files {
-		if output, err := exec.Command("sed", "-i", "-e",
+		if output, err := exec.Command("sed", "-ibak", "-e",
 			fmt.Sprintf("s/team:.*/team: %s/", newOwner),
 			fmt.Sprintf("launch/%s", file.Name()),
 		).CombinedOutput(); err != nil {
+			log.Fatal(string(output))
+		}
+		if output, err := exec.Command("rm", fmt.Sprintf("launch/%sbak", file.Name())).CombinedOutput(); err != nil {
 			log.Fatal(string(output))
 		}
 	}
