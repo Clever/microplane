@@ -2,6 +2,7 @@ package clone
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"path"
 )
@@ -21,15 +22,20 @@ type Output struct {
 
 type Error struct {
 	error
-	GitCloneOutput string
+	Details string
 }
 
 func Clone(ctx context.Context, input Input) (Output, error) {
 	cloneIntoDir := path.Join(input.WorkDir, "cloned")
+	if _, err := os.Stat(cloneIntoDir); err == nil {
+		// already cloned
+		return Output{Success: true, ClonedIntoDir: cloneIntoDir}, nil
+	}
+
 	cmd := exec.CommandContext(ctx, "git", "clone", input.GitURL, cloneIntoDir)
 	cmd.Dir = input.WorkDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return Output{Success: false}, Error{error: err, GitCloneOutput: string(output)}
+		return Output{Success: false}, Error{error: err, Details: string(output)}
 	}
 	return Output{Success: true, ClonedIntoDir: cloneIntoDir}, nil
 }

@@ -56,6 +56,12 @@
   revision = "bb50c06baba3d0c76f9d125c0719093e315b5b44"
 
 [[projects]]
+  branch = "master"
+  name = "golang.org/x/sync"
+  packages = ["semaphore"]
+  revision = "8e0aa688b654ef28caa72506fa5ec8dba9fc7690"
+
+[[projects]]
   name = "google.golang.org/appengine"
   packages = ["internal","internal/base","internal/datastore","internal/log","internal/remote_api","internal/urlfetch","urlfetch"]
   revision = "150dc57a1b433e64154302bdc40b6bb8aefa313a"
@@ -64,6 +70,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d081fc1234b5ab1bf1e2b6b66a25496b724c0c0085f5c164ef11c57ed93b92ae"
+  inputs-digest = "f719cc1dbc86409acf548561fef0ca2ecfd0bf3974e9f11d6164585b621915be"
   solver-name = "gps-cdcl"
   solver-version = 1

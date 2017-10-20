@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"path"
 
@@ -12,19 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// writeOutputJSON writes the output of the command into a JSON file, for use by later commands
-func writeOutputJSON(output initialize.Output, path string) error {
-	b, err := json.MarshalIndent(output, "", "    ")
-	if err != nil {
-		return err
-	}
-
-	err = ioutil.WriteFile(path, b, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func initOutputPath(target string) string {
+	return path.Join(workDir, target, "init.json")
 }
 
 var initCmd = &cobra.Command{
@@ -44,8 +31,7 @@ var initCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		p := path.Join(workDir, "/", output.Target, "/init.json")
-		err = writeOutputJSON(output, p)
+		err = writeJSON(output, initOutputPath(output.Target))
 		if err != nil {
 			log.Fatal(err)
 		}

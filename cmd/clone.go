@@ -7,11 +7,13 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
 	"github.com/facebookgo/errgroup"
 	"github.com/spf13/cobra"
+	"golang.org/x/sync/semaphore"
 )
 
 func loadJSON(path string, obj interface{}) error {
@@ -30,6 +32,10 @@ func writeJSON(obj interface{}, path string) error {
 	return ioutil.WriteFile(path, b, 0644)
 }
 
+func cloneOutputPath(target, repo string) string {
+	return path.Join(workDir, target, repo, "clone", "clone.json")
+}
+
 var cloneCmd = &cobra.Command{
 	Use:   "clone [target]",
 	Args:  cobra.ExactArgs(1),
@@ -40,12 +46,12 @@ var cloneCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0] // TODO: does ExactArgs(1) above guarantee this will be filled?
 		var initOutput initialize.Output
-		if err := loadJSON(path.Join(workDir, target, "init.json"), &initOutput); err != nil {
+		if err := loadJSON(initOutputPath(target), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
 		singleRepo, err := cmd.Flags().GetString("repo")
-		if err != nil {
+		if err == nil && singleRepo != "" {
 			valid := false
 			for _, r := range initOutput.Repos {
 				if r.Name == singleRepo {
@@ -59,23 +65,27 @@ var cloneCmd = &cobra.Command{
 		}
 
 		ctx := context.Background()
-
 		var eg errgroup.Group
-		// TODO: limit # of parallel clones
+		parallelCloneLimit := semaphore.NewWeighted(10)
 		for _, r := range initOutput.Repos {
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
 			}
-			cloneWorkDir := path.Join(workDir, target, r.Name, "clone")
-			if err := os.MkdirAll(workDir, 0755); err != nil {
+			outputPath := cloneOutputPath(target, r.Name)
+			cloneWorkDir := filepath.Dir(outputPath)
+			if err := os.MkdirAll(cloneWorkDir, 0755); err != nil {
 				log.Fatal(err)
 			}
+
 			eg.Add(1)
 			go func(cloneInput clone.Input) {
+				parallelCloneLimit.Acquire(ctx, 1)
+				defer parallelCloneLimit.Release(1)
 				defer eg.Done()
+				log.Printf("cloning: %s", cloneInput.GitURL)
 				output, err := clone.Clone(ctx, cloneInput)
 				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, path.Join(cloneInput.WorkDir, "clone.json"))
+				writeJSON(output, outputPath)
 				if err != nil {
 					eg.Error(err)
 					return

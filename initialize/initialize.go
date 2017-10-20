@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -61,17 +62,21 @@ func githubSearch(query string) ([]Repo, error) {
 	client := github.NewClient(tc)
 
 	opts := &github.SearchOptions{}
-	allRepos := []github.Repository{}
+	allRepos := map[string]*github.Repository{}
 	for {
-		result, resp, err := client.Search.Repositories(context.Background(), query, opts)
+		result, resp, err := client.Search.Code(context.Background(), query, opts)
 		if err != nil {
-			log.Fatalf("Search.Repositories returned error: %v", err)
+			log.Fatalf("Search.Code returned error: %v", err)
 		}
 		if result.GetIncompleteResults() {
 			log.Fatalf("Github API timed out before completing query")
 		}
 
-		allRepos = append(allRepos, result.Repositories...)
+		for _, codeResult := range result.CodeResults {
+			repoCopy := *codeResult.Repository
+			allRepos[*codeResult.Repository.Name] = &repoCopy
+		}
+		//allRepos = append(allRepos, result.Repositories...)
 		if resp.NextPage == 0 {
 			break
 		}
@@ -89,7 +94,7 @@ func githubSearch(query string) ([]Repo, error) {
 	for _, r := range allRepos {
 		repos = append(repos, Repo{
 			Name:     r.GetName(),
-			CloneURL: r.GetCloneURL(),
+			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
 		})
 	}
 
