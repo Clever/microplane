@@ -37,7 +37,7 @@ var initCmd = &cobra.Command{
 		}
 
 		for _, repo := range output.Repos {
-			fmt.Println(repo)
+			fmt.Println(repo.Name)
 		}
 	},
 }
