@@ -2,6 +2,7 @@ package push
 
 import (
 	"context"
+	"errors"
 	"os/exec"
 	"strings"
 )
@@ -35,12 +36,6 @@ type Output struct {
 	PullRequestURL string
 }
 
-// Error and details from Push()
-type Error struct {
-	error
-	Details string
-}
-
 // Push pushes the commit to Github and opens a pull request
 func Push(ctx context.Context, input Input) (Output, error) {
 	// Get the commit SHA from the last commit
@@ -49,15 +44,15 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	gitLog.Dir = input.PlanDir
 	gitLogOutput, err := gitLog.CombinedOutput()
 	if err != nil {
-		return Output{Success: false}, Error{error: err, Details: string(gitLogOutput)}
+		return Output{Success: false}, errors.New(string(gitLogOutput))
 	}
 
 	// Push the commit
-	cmd = Command{Path: "git", Args: []string{"push"}}
+	cmd = Command{Path: "git", Args: []string{"push", "-f", "origin", "HEAD:todo-mp-test"}}
 	gitPush := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 	gitPush.Dir = input.PlanDir
 	if output, err := gitPush.CombinedOutput(); err != nil {
-		return Output{Success: false}, Error{error: err, Details: string(output)}
+		return Output{Success: false}, errors.New(string(output))
 	}
 
 	// Open a pull request
@@ -66,7 +61,7 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	hubPullRequest.Dir = input.PlanDir
 	hubPullRequestOutput, err := hubPullRequest.CombinedOutput()
 	if err != nil {
-		return Output{Success: false}, Error{error: err, Details: string(hubPullRequestOutput)}
+		return Output{Success: false}, errors.New(string(hubPullRequestOutput))
 	}
 
 	return Output{Success: true, CommitSHA: string(gitLogOutput), PullRequestURL: strings.TrimSpace(string(hubPullRequestOutput))}, nil
