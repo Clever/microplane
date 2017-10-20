@@ -1,6 +1,11 @@
 # microplane
 
+
 A CLI tool to make git changes across many repos, especially useful with Microservices.
+
+![microplane](https://cdn.pixabay.com/photo/2013/07/12/14/16/lemon-148119_640.png)
+
+_"the lemon is Github"_
 
 ## Workflow
 
@@ -12,15 +17,16 @@ Init => Clone => Plan => Push => Merge
 
 ### Init
 
+Searches for matching repos in Github and initializes the microplane workflow.
+
 ```
-$ mp init <GH Search URL String>
-target-foo-bar
+$ mp init <Github Search>
 ```
 
 ### Clone
 
 ```
-$ mp clone <target>
+$ mp clone
 ```
 
 ### Plan
@@ -28,17 +34,15 @@ $ mp clone <target>
 Previews a change. Does not push commits to GitHub.
 
 ```
-$ mp plan <target> -c <command_to_run> -m <message>
+$ mp plan -m <message> -b <branch> -- <command>
 ```
-
-Should output the repos that errored.
 
 ### Push
 
 Pushes the change you planned and opens pull requests.
 
 ```
-$ mp push <target> [--delay <duration>]
+$ mp push
 ```
 
 ### Merge
@@ -46,7 +50,7 @@ $ mp push <target> [--delay <duration>]
 Merges the PRs that you pushed.
 
 ```
-$ mp merge <target> [--delay <duration>]
+$ mp merge
 ```
 
 
@@ -55,7 +59,7 @@ $ mp merge <target> [--delay <duration>]
 View the status of a change.
 
 ```
-$ mp status <target>
+$ mp status
 ```
 
 ## Data Model
