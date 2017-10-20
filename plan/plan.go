@@ -55,7 +55,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	for _, cmd := range []Command{
 		input.Command,
 		Command{Path: "git", Args: []string{"add", "-A"}},
-		Command{Path: "git", Args: []string{"commit", "-m", input.CommitMessage}},
+		Command{Path: "git", Args: []string{"commit", "--allow-empty", "-m", input.CommitMessage}},
 	} {
 		execCmd := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 		execCmd.Dir = planDir
