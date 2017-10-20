@@ -27,21 +27,21 @@
   Let's do the re-org right now
   - Target a set of repos by specifying a Github search: https://github.com/search?utf8=%E2%9C%93&q=org%3AClever+path%3Alaunch+eng-apps&type=
     ```
-    ./microplane init "org:Clever path:launch eng-apps"
+    ./mp init "org:Clever path:launch eng-apps"
     ```
   - Clone these repos:
     ```
-    ./microplane clone
-    ./microplane status
+    ./mp clone
+    ./mp status
     ```
   - Write a small script to update old team ownership the new:
     ```
     less demo/update-team.go
-    ./microplane plan go run `pwd`/demo/update-team.go
+    ./mp plan go run `pwd`/demo/update-team.go
     ```
   - Open PRs (all of them? or target handful of repos?)
     ```
-    ./microplane push -r hubble
+    ./mp push -r hubble
     ```
   - Watch status / merge?
 

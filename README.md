@@ -63,7 +63,7 @@ $ mp status <target>
 We persist the progress of a Microplane run in the following local file structure.
 
 ```
-.mp/<target>/
+./mp/<target>/
   init.json
   repo1/
     clone/
