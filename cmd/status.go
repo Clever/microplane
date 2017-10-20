@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 
@@ -20,23 +19,8 @@ var statusCmd = &cobra.Command{
 	Long: `status
                 long
                 description`,
-	Args: cobra.MaximumNArgs(1),
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			// find all targets
-			files, err := ioutil.ReadDir(workDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			for _, f := range files {
-				if f.IsDir() {
-					fmt.Printf("%s (%s)\n", f.Name(), f.ModTime())
-				}
-			}
-			return
-		}
-
 		target := args[0]
 		// find files and folders to explain the status of each repo
 		initPath := initOutputPath(target)
