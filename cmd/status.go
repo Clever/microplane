@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
@@ -46,18 +48,40 @@ var statusCmd = &cobra.Command{
 			}
 		}
 
-		// TODO: pretty print status
-		fmt.Printf("%40s    %20s    %20s\n", "repo", "status", "details")
-		fmt.Printf("%40s    %20s    %20s\n", "====", "======", "=======")
+		repos := []string{}
 		for _, r := range initOutput.Repos {
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
 			}
-
-			status := getRepoStatus(r.Name)
-			fmt.Printf("%40s    %20s    %20s\n", r.Name, status, "...")
+			repos = append(repos, r.Name)
 		}
+		printStatus(repos)
 	},
+}
+
+func tabWriterWithDefaults() *tabwriter.Writer {
+	w := new(tabwriter.Writer)
+	minWidth := 0
+	tabWidth := 8
+	padding := 3
+	padchar := '\t'
+	flags := uint(0)
+	w.Init(os.Stdout, minWidth, tabWidth, padding, byte(padchar), flags)
+	return w
+}
+
+func joinWithTab(s ...string) string {
+	return strings.Join(s, "\t")
+}
+
+func printStatus(repos []string) {
+	out := tabWriterWithDefaults()
+	fmt.Fprintln(out, joinWithTab("REPO", "STATUS"))
+	for _, r := range repos {
+		status := getRepoStatus(r)
+		fmt.Fprintln(out, joinWithTab(r, status))
+	}
+	out.Flush()
 }
 
 func getRepoStatus(repo string) string {
