@@ -1,0 +1,22 @@
+machine:
+  post:
+  - cd $HOME && git clone --depth 1 -v git@github.com:clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
+  - $HOME/ci-scripts/circleci/golang-install 1.9
+checkout:
+  post:
+  - $HOME/ci-scripts/circleci/golang-move-project
+compile:
+  override:
+  - make install_deps
+  - make build
+test:
+  override:
+  - make test
+deployment:
+  all:
+    branch: master
+    owner: Clever
+    commands:
+    - make release && $HOME/ci-scripts/circleci/github-release $GH_RELEASE_TOKEN release
+general:
+  build_dir: ../.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME

@@ -2,4 +2,6 @@
 vendor/
 
 # binary
+mp
 microplane
+release/
