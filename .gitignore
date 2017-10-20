@@ -2,6 +2,12 @@
 vendor/
 
 # binary
-mp
+bin/
 microplane
+
+# release
 release/
+
+# microplane init creates files in the mp/ dir
+# let's ignore this so we don't accidentally commit debug runs to the mp repo
+mp/

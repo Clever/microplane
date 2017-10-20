@@ -20,7 +20,7 @@ $(PKGS): golang-test-all-deps
 	$(call golang-test-all,$@)
 
 build:
-	@go build -ldflags "-X main.version=$(VERSION)" -o $(EXECUTABLE)
+	@go build -ldflags "-X main.version=$(VERSION)" -o ./bin/$(EXECUTABLE)
 
 install_deps: $(GOPATH)/bin/dep
 	@$(GOPATH)/bin/dep ensure
