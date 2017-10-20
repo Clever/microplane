@@ -25,6 +25,7 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
+	rootCmd.AddCommand(docsCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(mergeCmd)
 	rootCmd.AddCommand(planCmd)
