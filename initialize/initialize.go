@@ -77,18 +77,10 @@ func githubSearch(query string) ([]Repo, error) {
 			repoCopy := *codeResult.Repository
 			allRepos[*codeResult.Repository.Name] = &repoCopy
 		}
-		//allRepos = append(allRepos, result.Repositories...)
 		if resp.NextPage == 0 {
 			break
 		}
 		opts.Page = resp.NextPage
-
-		// TODO: Remove this short-circuiting
-		if opts.Page > 2 {
-			break
-		}
-
-		// TODO: Handle ratelimiting
 	}
 
 	repos := []Repo{}

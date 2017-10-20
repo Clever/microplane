@@ -37,7 +37,7 @@
   - Write a small script to update old team ownership the new:
     ```
     less demo/update-team.go
-    bin/mp plan -b eng-reorg -m "Eng Reorg: Update team names in launch.yml" -- go run `pwd`/demo/update-team.go
+    bin/mp plan -b eng-reorg -m "Eng Reorg: Update team name in launch.yml" -- go run `pwd`/demo/update-team.go
     ```
   - Open PRs--all of them!
     ```
