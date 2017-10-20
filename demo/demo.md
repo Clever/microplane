@@ -39,9 +39,9 @@
     less demo/update-team.go
     bin/mp plan -b eng-reorg -m "Eng Reorg: Update team names in launch.yml" -- go run `pwd`/demo/update-team.go
     ```
-  - Open PRs (all of them? or target handful of repos?)
+  - Open PRs--all of them!
     ```
-    bin/mp push -r hubble
+    bin/mp push
     ```
   - Watch status / merge?
 
