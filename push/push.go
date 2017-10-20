@@ -3,6 +3,7 @@ package push
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -23,10 +24,10 @@ type Input struct {
 	PRMessage string
 	// PRAssignee is the user who will be assigned the PR
 	PRAssignee string
-	// PRHeadBranch is the branch the new commit lives on
-	PRHeadBranch string
-	// PRBaseBranch is the branch we intend to merge our change into
-	PRBaseBranch string
+	// RepoOwner is the name of the user who owns the Github repo
+	RepoOwner string
+	// BranchName is the branch name in Git
+	BranchName string
 }
 
 // Output from Push()
@@ -48,7 +49,8 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	}
 
 	// Push the commit
-	cmd = Command{Path: "git", Args: []string{"push", "-f", "origin", "HEAD:todo-mp-test"}}
+	gitHeadBranch := fmt.Sprintf("HEAD:%s", input.BranchName)
+	cmd = Command{Path: "git", Args: []string{"push", "-f", "origin", gitHeadBranch}}
 	gitPush := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 	gitPush.Dir = input.PlanDir
 	if output, err := gitPush.CombinedOutput(); err != nil {
@@ -56,7 +58,9 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	}
 
 	// Open a pull request
-	cmd = Command{Path: "hub", Args: []string{"pull-request", "-m", input.PRMessage, "-a", input.PRAssignee, "-b", input.PRBaseBranch, "-h", input.PRHeadBranch}}
+	prHeadBranch := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
+	prBaseBranch := fmt.Sprintf("%s:%s", input.RepoOwner, "master")
+	cmd = Command{Path: "hub", Args: []string{"pull-request", "-m", input.PRMessage, "-a", input.PRAssignee, "-b", prBaseBranch, "-h", prHeadBranch}}
 	hubPullRequest := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 	hubPullRequest.Dir = input.PlanDir
 	hubPullRequestOutput, err := hubPullRequest.CombinedOutput()

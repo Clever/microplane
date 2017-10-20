@@ -15,6 +15,7 @@ type Command struct {
 	Args []string
 }
 
+// Input for Plan
 type Input struct {
 	// RepoDir is where the git repo to modify lives. It will be copied into WorkDir
 	RepoDir string
@@ -29,10 +30,13 @@ type Input struct {
 	BranchName string
 }
 
+// Output for Plan
 type Output struct {
-	Success bool
-	PlanDir string
-	GitDiff string
+	Success       bool
+	PlanDir       string
+	GitDiff       string
+	CommitMessage string
+	BranchName    string
 }
 
 func Plan(ctx context.Context, input Input) (Output, error) {
@@ -74,5 +78,11 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	}
 	gitDiff = string(output)
 
-	return Output{Success: true, PlanDir: planDir, GitDiff: gitDiff}, nil
+	return Output{
+		Success:       true,
+		PlanDir:       planDir,
+		GitDiff:       gitDiff,
+		BranchName:    input.BranchName,
+		CommitMessage: input.CommitMessage,
+	}, nil
 }

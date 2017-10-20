@@ -77,12 +77,12 @@ var pushCmd = &cobra.Command{
 					return
 				}
 			}(push.Input{
-				PlanDir:      planOutput.PlanDir,
-				WorkDir:      pushWorkDir,
-				PRMessage:    "TODO pr message",
-				PRAssignee:   "nathanleiby",
-				PRHeadBranch: "Clever:todo-mp-test", // TODO
-				PRBaseBranch: "Clever:master",       // TODO
+				PlanDir:    planOutput.PlanDir,
+				WorkDir:    pushWorkDir,
+				PRMessage:  planOutput.CommitMessage, // TODO: If I add nothing, will it just pass through the commit message?
+				PRAssignee: "",                       // TODO
+				BranchName: planOutput.BranchName,
+				RepoOwner:  r.Owner,
 			})
 		}
 		if err := eg.Wait(); err != nil {

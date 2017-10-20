@@ -32,10 +32,28 @@ var statusCmd = &cobra.Command{
 			log.Fatalf("error loading init.json: %s\n", err.Error())
 		}
 
+		singleRepo, err := cmd.Flags().GetString("repo")
+		if err == nil && singleRepo != "" {
+			valid := false
+			for _, r := range initOutput.Repos {
+				if r.Name == singleRepo {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				log.Fatalf("%s not a targeted repo name", singleRepo) // TODO: showing valid repo names would be helpful
+			}
+		}
+
 		// TODO: pretty print status
 		fmt.Printf("%40s    %20s    %20s\n", "repo", "status", "details")
 		fmt.Printf("%40s    %20s    %20s\n", "====", "======", "=======")
 		for _, r := range initOutput.Repos {
+			if singleRepo != "" && r.Name != singleRepo {
+				continue
+			}
+
 			status := getRepoStatus(r.Name)
 			fmt.Printf("%40s    %20s    %20s\n", r.Name, status, "...")
 		}

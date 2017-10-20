@@ -19,13 +19,16 @@ func planOutputPath(repo string) string {
 	return path.Join(workDir, repo, "plan", "plan.json")
 }
 
+var planFlagBranch string
+var planFlagMessage string
+
 var planCmd = &cobra.Command{
 	Use:   "plan [cmd] [args...]",
 	Args:  cobra.MinimumNArgs(1),
 	Short: "plan short description",
 	Long: `plan
                 long
-                description`,
+				description`,
 	Run: func(cmd *cobra.Command, args []string) {
 		changeCmd := args[0]
 		var changeCmdArgs []string
@@ -36,6 +39,22 @@ var planCmd = &cobra.Command{
 		var initOutput initialize.Output
 		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
 			log.Fatal(err)
+		}
+
+		branchName, err := cmd.Flags().GetString("branch")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if branchName == "" {
+			log.Fatal("--branch is required")
+		}
+
+		commitMessage, err := cmd.Flags().GetString("message")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if commitMessage == "" {
+			log.Fatal("--message is required")
 		}
 
 		singleRepo, err := cmd.Flags().GetString("repo")
@@ -87,8 +106,8 @@ var planCmd = &cobra.Command{
 				RepoDir:       cloneOutput.ClonedIntoDir,
 				WorkDir:       planWorkDir,
 				Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},
-				CommitMessage: "todo commit message", // TODO
-				BranchName:    "todo-mp-test",        // TODO
+				CommitMessage: commitMessage,
+				BranchName:    branchName,
 			})
 		}
 		if err := eg.Wait(); err != nil {

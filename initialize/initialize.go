@@ -11,26 +11,32 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// Repo describes a GithubRepository
 type Repo struct {
 	Name     string
+	Owner    string
 	CloneURL string
 }
 
+// Input for Initialize
 type Input struct {
 	WorkDir string
 	Query   string
 }
 
+// Output for Initialize
 type Output struct {
 	Repos []Repo
 }
 
+// ByName allows sorting repos by name
 type ByName []Repo
 
 func (a ByName) Len() int           { return len(a) }
 func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
+// Initialize searches Github for matching repos
 func Initialize(input Input) (Output, error) {
 	repos, err := githubSearch(input.Query)
 	if err != nil {
@@ -89,6 +95,7 @@ func githubSearch(query string) ([]Repo, error) {
 	for _, r := range allRepos {
 		repos = append(repos, Repo{
 			Name:     r.GetName(),
+			Owner:    r.Owner.GetLogin(),
 			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
 		})
 	}
