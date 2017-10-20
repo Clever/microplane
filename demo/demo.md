@@ -21,11 +21,9 @@
 
 - Example: we have a re-org happening on Monday.
   In every repo we encode what team owns the repo
-  ```
-  grep -H team */launch/*
-  ```
+  https://github.com/search?utf8=%E2%9C%93&q=org%3AClever+path%3Alaunch+eng-apps&type=
   Let's do the re-org right now
-  - Target a set of repos by specifying a Github search: https://github.com/search?utf8=%E2%9C%93&q=org%3AClever+path%3Alaunch+eng-apps&type=
+  - Copy github search string
     ```
     bin/mp init "org:Clever path:launch eng-apps"
     ```
@@ -43,7 +41,8 @@
     ```
     bin/mp push
     ```
-  - Watch status / merge?
+  - See PRs opened
+    https://github.com/pulls?utf8=%E2%9C%93&q=org%3AClever+%22eng+reorg%22+is%3Aopen
 
 - Next steps:
   - unleash the guilds

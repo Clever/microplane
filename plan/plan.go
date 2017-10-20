@@ -45,7 +45,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	// but the change command has been edited and you want to run again
 	planDir := path.Join(input.WorkDir, "planned")
 	if err := os.RemoveAll(planDir); err != nil {
-		return Output{Success: false}, errors.New(fmt.Sprintf("could not clear directroy %s", planDir))
+		return Output{Success: false}, fmt.Errorf("could not clear directory %s", planDir)
 	}
 	cmd := exec.CommandContext(ctx, "cp", "-r", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
 	cmd.Dir = input.RepoDir
