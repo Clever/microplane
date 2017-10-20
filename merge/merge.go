@@ -21,8 +21,8 @@ type Input struct {
 	Org string
 	// Repo is the name of the repo on Github, e.g. "microplane"
 	Repo string
-	// PullRequestNumber of Github, e.g. 1 for https://github.com/Clever/microplane/pull/1
-	PullRequestNumber int
+	// PRNumber of Github, e.g. for https://github.com/Clever/microplane/pull/123, the PRNumber is 123
+	PRNumber int
 	// CommitSHA for the commit which opened the above PR. Used to look up Commit status.
 	CommitSHA string
 }
@@ -50,8 +50,8 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 
 	// OK to merge?
 
-	// Check if the PR is mergeable
-	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PullRequestNumber)
+	// (1) Check if the PR is mergeable
+	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
 	if err != nil {
 		return Output{}, err
 	}
@@ -59,7 +59,7 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("PR is not mergeable")
 	}
 
-	// Check commit status
+	// (2) Check commit status
 	opt := &github.ListOptions{}
 	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
 	if err != nil {
@@ -70,28 +70,19 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 		return Output{}, fmt.Errorf("status was not 'success', instead was '%s'", state)
 	}
 
-	// TODO: check if PR has been "rejected" by a reviewer
+	// (3) check if PR has been rejected by a reviewer
+	// TODO
 
-	///////////////
 	// Merge the PR
+	options := &github.PullRequestOptions{}
+	commitMsg := ""
+	result, _, err := client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
+	if err != nil {
+		return Output{Success: false}, err
+	}
+	if !result.GetMerged() {
+		return Output{Success: false}, fmt.Errorf("failed to merge: %s", result.GetMessage())
+	}
 
-	// # https://developer.github.com/v3/repos/merging/
-
-	// REPO=$1
-	// PR_NUMBER=$2
-
-	// URL="https://api.github.com/repos/Clever/$REPO/pulls/$PR_NUMBER/merge"
-
-	// echo "Merging PR $PR_NUMBER into 'master' for repo Clever/$REPO..."
-	// echo "PUT $URL"
-
-	// curl "$URL" \
-	//   -XPUT \
-	//   -H "Authorization: token $GITHUB_API_TOKEN" \
-	//   -d "{
-	// 	\"merge_method\": \"rebase\", ?? merge
-	// 	\"commit_title\": \"Merge pull request #$PR_NUMBER from Clever/use-golang-1.8\"
-	//   }"
-
-	return Output{Success: true, MergeCommitSHA: "TODO"}, nil
+	return Output{Success: true, MergeCommitSHA: result.GetSHA()}, nil
 }

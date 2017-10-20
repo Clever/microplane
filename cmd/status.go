@@ -7,7 +7,9 @@ import (
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
+	"github.com/Clever/microplane/push"
 	"github.com/spf13/cobra"
 )
 
@@ -36,16 +38,37 @@ var statusCmd = &cobra.Command{
 		fmt.Printf("%40s    %20s    %20s\n", "repo", "status", "details")
 		fmt.Printf("%40s    %20s    %20s\n", "====", "======", "=======")
 		for _, r := range initOutput.Repos {
-			status := "initialized"
-			var cloneOutput clone.Output
-			if loadJSON(cloneOutputPath(target, r.Name), &cloneOutput) == nil && cloneOutput.Success {
-				status = "cloned"
-				var planOutput plan.Output
-				if loadJSON(planOutputPath(target, r.Name), &planOutput) == nil && planOutput.Success {
-					status = "planned"
-				}
-			}
+			status := getRepoStatus(target, r.Name)
 			fmt.Printf("%40s    %20s    %20s\n", r.Name, status, "...")
 		}
 	},
+}
+
+func getRepoStatus(target, repo string) string {
+	status := "initialized"
+	var cloneOutput clone.Output
+	if !(loadJSON(cloneOutputPath(target, repo), &cloneOutput) == nil && cloneOutput.Success) {
+		return status
+	}
+	status = "cloned"
+
+	var planOutput plan.Output
+	if !(loadJSON(planOutputPath(target, repo), &planOutput) == nil && planOutput.Success) {
+		return status
+	}
+	status = "planned"
+
+	var pushOutput push.Output
+	if !(loadJSON(pushOutputPath(target, repo), &pushOutput) == nil && pushOutput.Success) {
+		return status
+	}
+	status = "pushed"
+
+	var mergeOutput merge.Output
+	if !(loadJSON(mergeOutputPath(target, repo), &mergeOutput) == nil && mergeOutput.Success) {
+		return status
+	}
+	status = "merged"
+
+	return status
 }

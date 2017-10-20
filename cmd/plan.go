@@ -63,6 +63,7 @@ var planCmd = &cobra.Command{
 			var cloneOutput clone.Output
 			if loadJSON(cloneOutputPath(target, r.Name), &cloneOutput) != nil || !cloneOutput.Success {
 				log.Printf("skipping %s, must successfully clone first", r.Name)
+				continue
 			}
 			outputPath := planOutputPath(target, r.Name)
 			planWorkDir := filepath.Dir(outputPath)
@@ -87,7 +88,8 @@ var planCmd = &cobra.Command{
 				RepoDir:       cloneOutput.ClonedIntoDir,
 				WorkDir:       planWorkDir,
 				Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},
-				CommitMessage: "todo commit message",
+				CommitMessage: "todo commit message", // TODO
+				BranchName:    "todo-mp-test",        // TODO
 			})
 		}
 		if err := eg.Wait(); err != nil {

@@ -24,6 +24,8 @@ type Input struct {
 	Command Command
 	// CommitMessage to send to `git commit -m`
 	CommitMessage string
+	// BranchName where the commit will be made
+	BranchName string
 }
 
 type Output struct {
@@ -54,7 +56,9 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	// run the change command, git add, and git commit
 	for _, cmd := range []Command{
 		input.Command,
+		Command{Path: "git", Args: []string{"checkout", "-b", input.BranchName}},
 		Command{Path: "git", Args: []string{"add", "-A"}},
+		// TODO: Handle case of empty diff
 		Command{Path: "git", Args: []string{"commit", "--allow-empty", "-m", input.CommitMessage}},
 	} {
 		execCmd := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
