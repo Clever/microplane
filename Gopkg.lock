@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/facebookgo/errgroup"
+  packages = ["."]
+  revision = "779c8d7ef069c522bc72ee5f31a98d89a37f3fb6"
+
+[[projects]]
+  branch = "master"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
@@ -58,6 +64,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0b059935fd2888e84cb990422a4814339bfb78762fff37d5fb674400ffc25557"
+  inputs-digest = "d081fc1234b5ab1bf1e2b6b66a25496b724c0c0085f5c164ef11c57ed93b92ae"
   solver-name = "gps-cdcl"
   solver-version = 1
