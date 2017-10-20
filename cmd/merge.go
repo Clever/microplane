@@ -1,8 +1,10 @@
 package cmd
 
 import (
-	"fmt"
+	"context"
+	"log"
 
+	"github.com/Clever/microplane/merge"
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +15,15 @@ var mergeCmd = &cobra.Command{
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("merge")
+		_, err := merge.Merge(context.Background(), merge.Input{
+			// TODO: Get user input, instead
+			Org:               "Clever",
+			Repo:              "microplane",
+			PullRequestNumber: 1,
+			CommitSHA:         "960ecbb",
+		})
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
