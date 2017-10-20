@@ -15,7 +15,7 @@ type Command struct {
 }
 
 type Input struct {
-	// RepoDir is where the git repo to modify lives. It will be copied into ...
+	// RepoDir is where the git repo to modify lives. It will be copied into WorkDir
 	RepoDir string
 	// WorkDir is where we will store some results:
 	//   - {WorkDir}/plan: stores a copy of repodir but with a new commit containing changes
@@ -40,12 +40,13 @@ type Error struct {
 func Plan(ctx context.Context, input Input) (Output, error) {
 	// create a copy of the cloned repo and run all commands there
 	// wipe out the directory in case Plan has been run previously
-	planDir := path.Join(input.WorkDir, "plan")
+	// but the change command has been edited and you want to run again
+	planDir := path.Join(input.WorkDir, "planned")
 	if err := os.RemoveAll(planDir); err != nil {
 		return Output{Success: false}, Error{error: err, Details: fmt.Sprintf("could not clear directroy %s", planDir)}
 	}
 	cmd := exec.CommandContext(ctx, "cp", "-r", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
-	cmd.Dir = input.WorkDir
+	cmd.Dir = input.RepoDir
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return Output{Success: false}, Error{error: err, Details: string(output)}
 	}

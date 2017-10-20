@@ -66,7 +66,7 @@ var cloneCmd = &cobra.Command{
 
 		ctx := context.Background()
 		var eg errgroup.Group
-		parallelCloneLimit := semaphore.NewWeighted(10)
+		parallelLimit := semaphore.NewWeighted(10)
 		for _, r := range initOutput.Repos {
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
@@ -79,8 +79,8 @@ var cloneCmd = &cobra.Command{
 
 			eg.Add(1)
 			go func(cloneInput clone.Input) {
-				parallelCloneLimit.Acquire(ctx, 1)
-				defer parallelCloneLimit.Release(1)
+				parallelLimit.Acquire(ctx, 1)
+				defer parallelLimit.Release(1)
 				defer eg.Done()
 				log.Printf("cloning: %s", cloneInput.GitURL)
 				output, err := clone.Clone(ctx, cloneInput)
