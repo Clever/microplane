@@ -15,27 +15,26 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func planOutputPath(target, repo string) string {
-	return path.Join(workDir, target, repo, "plan", "plan.json")
+func planOutputPath(repo string) string {
+	return path.Join(workDir, repo, "plan", "plan.json")
 }
 
 var planCmd = &cobra.Command{
-	Use:   "plan [target] [cmd] [args...]",
-	Args:  cobra.MinimumNArgs(2),
+	Use:   "plan [cmd] [args...]",
+	Args:  cobra.MinimumNArgs(1),
 	Short: "plan short description",
 	Long: `plan
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		target := args[0]
-		changeCmd := args[1]
+		changeCmd := args[0]
 		var changeCmdArgs []string
-		if len(args) > 2 {
-			changeCmdArgs = args[2:]
+		if len(args) > 1 {
+			changeCmdArgs = args[1:]
 		}
 
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(target), &initOutput); err != nil {
+		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -61,11 +60,11 @@ var planCmd = &cobra.Command{
 				continue
 			}
 			var cloneOutput clone.Output
-			if loadJSON(cloneOutputPath(target, r.Name), &cloneOutput) != nil || !cloneOutput.Success {
+			if loadJSON(cloneOutputPath(r.Name), &cloneOutput) != nil || !cloneOutput.Success {
 				log.Printf("skipping %s, must successfully clone first", r.Name)
 				continue
 			}
-			outputPath := planOutputPath(target, r.Name)
+			outputPath := planOutputPath(r.Name)
 			planWorkDir := filepath.Dir(outputPath)
 			if err := os.MkdirAll(planWorkDir, 0755); err != nil {
 				log.Fatal(err)

@@ -31,17 +31,17 @@
     ```
   - Clone these repos:
     ```
-    ./microplane clone target-1508513271
-    ./microplane status target-1508513271
+    ./microplane clone
+    ./microplane status
     ```
   - Write a small script to update old team ownership the new:
     ```
     less demo/update-team.go
-    ./microplane plan target-1508513271 go run `pwd`/demo/update-team.go
+    ./microplane plan go run `pwd`/demo/update-team.go
     ```
   - Open PRs (all of them? or target handful of repos?)
     ```
-    ./microplane push -r hubble target-1508513271
+    ./microplane push -r hubble
     ```
   - Watch status / merge?
 

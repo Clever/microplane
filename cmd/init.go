@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func initOutputPath(target string) string {
-	return path.Join(workDir, target, "init.json")
+func initOutputPath() string {
+	return path.Join(workDir, "init.json")
 }
 
 var initCmd = &cobra.Command{
@@ -31,11 +31,13 @@ var initCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		err = writeJSON(output, initOutputPath(output.Target))
+		err = writeJSON(output, initOutputPath())
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		fmt.Println(output.Target)
+		for _, repo := range output.Repos {
+			fmt.Println(repo)
+		}
 	},
 }

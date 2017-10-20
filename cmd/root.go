@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/user"
-	"path"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -32,17 +31,11 @@ func init() {
 	rootCmd.AddCommand(pushCmd)
 	rootCmd.AddCommand(statusCmd)
 
-	// Determine workDir
-	user, err := user.Current()
-	if err != nil {
-		log.Fatalf("error looking up user: %s\n", err.Error())
-	}
-	workDir = path.Join(user.HomeDir, "/.microplane")
+	workDir, _ = filepath.Abs("./mp")
 
 	// Create workDir, if doesn't yet exist
-	if _, err = os.Stat(workDir); os.IsNotExist(err) {
-		err = os.Mkdir(workDir, 0755)
-		if err != nil {
+	if _, err := os.Stat(workDir); os.IsNotExist(err) {
+		if err := os.Mkdir(workDir, 0755); err != nil {
 			log.Fatalf("error creating workDir: %s\n", err.Error())
 		}
 	}

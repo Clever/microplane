@@ -2,6 +2,7 @@ package clone
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -27,6 +28,7 @@ type Error struct {
 
 func Clone(ctx context.Context, input Input) (Output, error) {
 	cloneIntoDir := path.Join(input.WorkDir, "cloned")
+	fmt.Println(cloneIntoDir)
 	if _, err := os.Stat(cloneIntoDir); err == nil {
 		// already cloned
 		return Output{Success: true, ClonedIntoDir: cloneIntoDir}, nil

@@ -32,21 +32,19 @@ func writeJSON(obj interface{}, path string) error {
 	return ioutil.WriteFile(path, b, 0644)
 }
 
-func cloneOutputPath(target, repo string) string {
-	return path.Join(workDir, target, repo, "clone", "clone.json")
+func cloneOutputPath(repo string) string {
+	return path.Join(workDir, repo, "clone", "clone.json")
 }
 
 var cloneCmd = &cobra.Command{
-	Use:   "clone [target]",
-	Args:  cobra.ExactArgs(1),
+	Use:   "clone",
 	Short: "clone short description",
 	Long: `clone
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		target := args[0] // TODO: does ExactArgs(1) above guarantee this will be filled?
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(target), &initOutput); err != nil {
+		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -71,7 +69,7 @@ var cloneCmd = &cobra.Command{
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
 			}
-			outputPath := cloneOutputPath(target, r.Name)
+			outputPath := cloneOutputPath(r.Name)
 			cloneWorkDir := filepath.Dir(outputPath)
 			if err := os.MkdirAll(cloneWorkDir, 0755); err != nil {
 				log.Fatal(err)

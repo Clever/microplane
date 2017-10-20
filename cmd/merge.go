@@ -17,8 +17,8 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func mergeOutputPath(target, repo string) string {
-	return path.Join(workDir, target, repo, "merge", "merge.json")
+func mergeOutputPath(repo string) string {
+	return path.Join(workDir, repo, "merge", "merge.json")
 }
 
 var mergeCmd = &cobra.Command{
@@ -28,9 +28,8 @@ var mergeCmd = &cobra.Command{
                 long
                 description`,
 	Run: func(cmd *cobra.Command, args []string) {
-		target := args[0]
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(target), &initOutput); err != nil {
+		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -56,7 +55,7 @@ var mergeCmd = &cobra.Command{
 				continue
 			}
 			var pushOutput push.Output
-			if loadJSON(pushOutputPath(target, r.Name), &pushOutput) != nil || !pushOutput.Success {
+			if loadJSON(pushOutputPath(r.Name), &pushOutput) != nil || !pushOutput.Success {
 				log.Printf("skipping %s, must successfully push first", r.Name)
 				continue
 			}
@@ -66,7 +65,7 @@ var mergeCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			outputPath := mergeOutputPath(target, r.Name)
+			outputPath := mergeOutputPath(r.Name)
 			mergeWorkDir := filepath.Dir(outputPath)
 			if err := os.MkdirAll(mergeWorkDir, 0755); err != nil {
 				log.Fatal(err)

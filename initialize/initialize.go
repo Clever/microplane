@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"time"
+	"sort"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -23,27 +22,23 @@ type Input struct {
 }
 
 type Output struct {
-	Target string
-	Repos  []Repo
+	Repos []Repo
 }
 
+type ByName []Repo
+
+func (a ByName) Len() int           { return len(a) }
+func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
+
 func Initialize(input Input) (Output, error) {
-	target := "target-" + strconv.Itoa(int(time.Now().Unix()))
-
-	// Create Target dir
-	err := os.Mkdir(input.WorkDir+"/"+target+"/", 0755)
-	if err != nil {
-		return Output{}, err
-	}
-
 	repos, err := githubSearch(input.Query)
 	if err != nil {
 		return Output{}, err
 	}
-
+	sort.Sort(ByName(repos))
 	return Output{
-		Target: target,
-		Repos:  repos,
+		Repos: repos,
 	}, nil
 }
 
