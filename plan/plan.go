@@ -32,7 +32,9 @@ type Input struct {
 
 // Output for Plan
 type Output struct {
-	Success       bool
+	Success bool
+	Details string
+
 	PlanDir       string
 	GitDiff       string
 	CommitMessage string
@@ -50,7 +52,8 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	cmd := exec.CommandContext(ctx, "cp", "-r", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
 	cmd.Dir = input.RepoDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return Output{Success: false}, errors.New(string(output))
+		details := string(output)
+		return Output{Success: false, Details: details}, errors.New(details)
 	}
 
 	// run the change command, git add, and git commit
@@ -58,13 +61,13 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 		input.Command,
 		Command{Path: "git", Args: []string{"checkout", "-b", input.BranchName}},
 		Command{Path: "git", Args: []string{"add", "-A"}},
-		// TODO: Handle case of empty diff
 		Command{Path: "git", Args: []string{"commit", "-m", input.CommitMessage}},
 	} {
 		execCmd := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 		execCmd.Dir = planDir
 		if output, err := execCmd.CombinedOutput(); err != nil {
-			return Output{Success: false}, errors.New(string(output))
+			details := string(output)
+			return Output{Success: false, Details: details}, errors.New(details)
 		}
 	}
 
@@ -74,7 +77,8 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	gitDiffCmd.Dir = planDir
 	output, err := gitDiffCmd.CombinedOutput()
 	if err != nil {
-		return Output{Success: false}, errors.New(string(output))
+		details := string(output)
+		return Output{Success: false, Details: details}, errors.New(details)
 	}
 	gitDiff = string(output)
 

@@ -73,39 +73,41 @@ func joinWithTab(s ...string) string {
 
 func printStatus(repos []string) {
 	out := tabWriterWithDefaults()
-	fmt.Fprintln(out, joinWithTab("REPO", "STATUS"))
+	fmt.Fprintln(out, joinWithTab("REPO", "STATUS", "DETAILS"))
 	for _, r := range repos {
-		status := getRepoStatus(r)
-		fmt.Fprintln(out, joinWithTab(r, status))
+		status, details := getRepoStatus(r)
+		fmt.Fprintln(out, joinWithTab(r, status, strings.TrimSpace(details)))
 	}
 	out.Flush()
 }
 
-func getRepoStatus(repo string) string {
-	status := "initialized"
+func getRepoStatus(repo string) (status, details string) {
+	status = "initialized"
+	details = ""
 	var cloneOutput clone.Output
 	if !(loadJSON(cloneOutputPath(repo), &cloneOutput) == nil && cloneOutput.Success) {
-		return status
+		return
 	}
 	status = "cloned"
 
 	var planOutput plan.Output
 	if !(loadJSON(planOutputPath(repo), &planOutput) == nil && planOutput.Success) {
-		return status
+		details = "(plan error) " + planOutput.Details
+		return
 	}
 	status = "planned"
 
 	var pushOutput push.Output
 	if !(loadJSON(pushOutputPath(repo), &pushOutput) == nil && pushOutput.Success) {
-		return status
+		return
 	}
 	status = "pushed"
 
 	var mergeOutput merge.Output
 	if !(loadJSON(mergeOutputPath(repo), &mergeOutput) == nil && mergeOutput.Success) {
-		return status
+		return
 	}
 	status = "merged"
 
-	return status
+	return
 }
