@@ -39,7 +39,7 @@
     ```
   - Open PRs--all of them!
     ```
-    bin/mp push
+    bin/mp push -a nathanleiby
     ```
   - See PRs opened
     https://github.com/pulls?utf8=%E2%9C%93&q=org%3AClever+%22eng+reorg%22+is%3Aopen
