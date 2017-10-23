@@ -92,7 +92,9 @@ func getRepoStatus(repo string) (status, details string) {
 
 	var planOutput plan.Output
 	if !(loadJSON(planOutputPath(repo), &planOutput) == nil && planOutput.Success) {
-		details = "(plan error) " + planOutput.Details
+		if planOutput.Details != "" {
+			details = "(plan error) " + planOutput.Details
+		}
 		return
 	}
 	status = "planned"
