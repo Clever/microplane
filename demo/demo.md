@@ -33,6 +33,7 @@
     bin/mp status
     ```
   - Write a small script to update old team ownership the new:
+    _(NOTE: This script requires git version 2.7 or greater)_
     ```
     less demo/update-team.go
     bin/mp plan -b eng-reorg -m "Eng Reorg: Update team name in launch.yml" -- go run `pwd`/demo/update-team.go
