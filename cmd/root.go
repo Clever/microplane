@@ -16,6 +16,10 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	if os.Getenv("GITHUB_API_TOKEN") == "" {
+		log.Fatalf("GITHUB_API_TOKEN env var is not set. In order to use microplane, create a token (https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) then set the env var.")
+	}
+
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
 	rootCmd.AddCommand(docsCmd)
