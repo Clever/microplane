@@ -22,11 +22,13 @@ type Repo struct {
 type Input struct {
 	WorkDir string
 	Query   string
+	Version string
 }
 
 // Output for Initialize
 type Output struct {
-	Repos []Repo
+	Version string
+	Repos   []Repo
 }
 
 // ByName allows sorting repos by name
@@ -44,7 +46,8 @@ func Initialize(input Input) (Output, error) {
 	}
 	sort.Sort(ByName(repos))
 	return Output{
-		Repos: repos,
+		Version: input.Version,
+		Repos:   repos,
 	}, nil
 }
 

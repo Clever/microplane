@@ -28,6 +28,7 @@ would target all Clever repos with a circle.yml file.`,
 		output, err := initialize.Initialize(initialize.Input{
 			Query:   query,
 			WorkDir: workDir,
+			Version: cliVersion,
 		})
 		if err != nil {
 			log.Fatal(err)

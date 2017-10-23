@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Clever/microplane/initialize"
 	"github.com/spf13/cobra"
 )
 
 var workDir string
+var cliVersion string
 
 var rootCmd = &cobra.Command{
 	Use:   "mp",
@@ -46,6 +48,22 @@ func init() {
 }
 
 // Execute starts the CLI
-func Execute() error {
+func Execute(version string) error {
+	cliVersion = version
+
+	// Check if your current workdir was created with an incompatible version of microplane
+	var initOutput initialize.Output
+	err := loadJSON(initOutputPath(), &initOutput)
+	if err != nil {
+		// If there's no file, that's OK
+		if !os.IsNotExist(err) {
+			log.Fatal(err)
+		}
+	} else {
+		if initOutput.Version != cliVersion {
+			log.Fatalf("A workdir (%s) exists, created with microplane version %s. This is incompatible with your version %s. Either run again using a compatible version, or remove the workdir and restart.", workDir, initOutput.Version, version)
+		}
+	}
+
 	return rootCmd.Execute()
 }
