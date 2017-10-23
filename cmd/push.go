@@ -19,13 +19,24 @@ func pushOutputPath(repo string) string {
 	return path.Join(workDir, repo, "push", "push.json")
 }
 
+var pushFlagAssignee string
+
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Push planned changes",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
 			log.Fatal(err)
+		}
+
+		prAssignee, err := cmd.Flags().GetString("assignee")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if prAssignee == "" {
+			log.Fatal("--assignee is required")
 		}
 
 		singleRepo, err := cmd.Flags().GetString("repo")
@@ -76,8 +87,8 @@ var pushCmd = &cobra.Command{
 			}(push.Input{
 				PlanDir:    planOutput.PlanDir,
 				WorkDir:    pushWorkDir,
-				PRMessage:  planOutput.CommitMessage, // TODO: If I add nothing, will it just pass through the commit message?
-				PRAssignee: "",                       // TODO
+				PRMessage:  planOutput.CommitMessage,
+				PRAssignee: prAssignee,
 				BranchName: planOutput.BranchName,
 				RepoOwner:  r.Owner,
 			})

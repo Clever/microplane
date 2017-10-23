@@ -21,10 +21,14 @@ func init() {
 	rootCmd.AddCommand(docsCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(mergeCmd)
+
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
+
 	rootCmd.AddCommand(pushCmd)
+	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
+
 	rootCmd.AddCommand(statusCmd)
 
 	workDir, _ = filepath.Abs("./mp")
