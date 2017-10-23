@@ -76,7 +76,12 @@ func printStatus(repos []string) {
 	fmt.Fprintln(out, joinWithTab("REPO", "STATUS", "DETAILS"))
 	for _, r := range repos {
 		status, details := getRepoStatus(r)
-		fmt.Fprintln(out, joinWithTab(r, status, strings.TrimSpace(details)))
+		d2 := strings.TrimSpace(details)
+		d3 := strings.Join(strings.Split(d2, "\n"), " ")
+		if len(d3) > 40 {
+			d3 = d3[:60] + "..."
+		}
+		fmt.Fprintln(out, joinWithTab(r, status, d3))
 	}
 	out.Flush()
 }

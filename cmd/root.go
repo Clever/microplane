@@ -65,5 +65,7 @@ func Execute(version string) error {
 		}
 	}
 
+	// TODO: Verify `hub` in installed
+
 	return rootCmd.Execute()
 }

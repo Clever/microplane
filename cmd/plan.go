@@ -100,6 +100,7 @@ var planCmd = &cobra.Command{
 					return
 				}
 			}(plan.Input{
+				RepoName:      r.Name,
 				RepoDir:       cloneOutput.ClonedIntoDir,
 				WorkDir:       planWorkDir,
 				Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},

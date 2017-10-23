@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 var repoToOwner = map[string]string{
@@ -167,13 +166,10 @@ var repoToOwner = map[string]string{
 }
 
 func main() {
-	output, err := exec.Command("git", "remote", "get-url", "--push", "origin").CombinedOutput()
-	if err != nil {
-		log.Fatal(err)
+	repoName := os.Getenv("MICROPLANE_REPO")
+	if repoName == "" {
+		log.Fatal("expected MICROPLANE_REPO env var to be set")
 	}
-	remoteURL := strings.TrimSpace(string(output))
-	remoteURLSplit := strings.Split(string(remoteURL), "/")
-	repoName := strings.Replace(remoteURLSplit[len(remoteURLSplit)-1], ".git", "", 1)
 	newOwner, ok := repoToOwner[repoName]
 	if !ok {
 		os.Exit(0)

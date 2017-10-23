@@ -17,6 +17,8 @@ type Command struct {
 
 // Input for Plan
 type Input struct {
+	// RepoName
+	RepoName string
 	// RepoDir is where the git repo to modify lives. It will be copied into WorkDir
 	RepoDir string
 	// WorkDir is where we will store some results:
@@ -65,6 +67,8 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	} {
 		execCmd := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 		execCmd.Dir = planDir
+		// Set MICROPLANE_<X> convenience env vars, for use in user's script
+		execCmd.Env = append(os.Environ(), fmt.Sprintf("MICROPLANE_REPO=%s", input.RepoName))
 		if output, err := execCmd.CombinedOutput(); err != nil {
 			details := string(output)
 			return Output{Success: false, Details: details}, errors.New(details)
