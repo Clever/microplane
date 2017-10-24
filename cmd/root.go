@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/user"
+	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
@@ -72,6 +74,15 @@ func Execute(version string) error {
 	_, err = execCmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("hub (github.com/github/hub) is required. Please install hub and verify it's in your path")
+	}
+
+	// Verify `hub` is configured (at least that it has a config file)
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if _, err := os.Stat(path.Join(user.HomeDir, ".config/hub")); err != nil {
+		log.Fatalf("hub (github.com/github/hub) is not yet configured: ~/.config/hub does not exist")
 	}
 
 	return rootCmd.Execute()
