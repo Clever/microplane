@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"context"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
@@ -65,7 +67,12 @@ func Execute(version string) error {
 		}
 	}
 
-	// TODO: Verify `hub` in installed
+	// Verify `hub` is installed
+	execCmd := exec.CommandContext(context.Background(), "which", "hub")
+	_, err = execCmd.CombinedOutput()
+	if err != nil {
+		log.Fatalf("hub (github.com/github/hub) is required. Please install hub and verify it's in your path")
+	}
 
 	return rootCmd.Execute()
 }
