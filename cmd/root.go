@@ -82,7 +82,11 @@ func Execute(version string) error {
 		log.Fatal(err)
 	}
 	if _, err := os.Stat(path.Join(user.HomeDir, ".config/hub")); err != nil {
-		log.Fatalf("hub (github.com/github/hub) is not yet configured: ~/.config/hub does not exist")
+		log.Fatalf("hub (github.com/github/hub) is not yet configured: ~/.config/hub does not exist. Please create this file with the following contents: \n\n" +
+			`github.com:
+- user: <your GH user>
+  oauth_token: <your token>
+  protocol: https`)
 	}
 
 	return rootCmd.Execute()
