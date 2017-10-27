@@ -5,7 +5,7 @@
   ```
   ls | wc -l
   ```
-  500+ repos!
+  OVER 9000+ repos!
   - sometimes we want to make the same conceptual change to a large subset of them
   show: 187 PRs for updating to go 1.8 https://github.com/pulls?utf8=%E2%9C%93&q=is%3Aclosed+is%3Apr+%22go+1.7+1.8%22+org%3AClever+NOT+Revert+
   - we have tools to automate some of this process, but the process still takes
