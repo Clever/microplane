@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
@@ -53,7 +55,7 @@ func Execute(version string) error {
 
 	// Check if your current workdir was created with an incompatible version of microplane
 	var initOutput initialize.Output
-	err := loadJSON(initOutputPath(), &initOutput)
+	err := loadJSON(outputPath("", "init"), &initOutput)
 	if err != nil {
 		// If there's no file, that's OK
 		if !os.IsNotExist(err) {
@@ -66,4 +68,12 @@ func Execute(version string) error {
 	}
 
 	return rootCmd.Execute()
+}
+
+// outputPath helper constructs the output path string for each step
+func outputPath(repoName string, step string) string {
+	if step == "init" {
+		return path.Join(workDir, "init.json")
+	}
+	return path.Join(workDir, repoName, step, fmt.Sprintf("%s.json", step))
 }

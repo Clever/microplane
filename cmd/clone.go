@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/clone"
@@ -32,16 +31,12 @@ func writeJSON(obj interface{}, path string) error {
 	return ioutil.WriteFile(path, b, 0644)
 }
 
-func cloneOutputPath(repo string) string {
-	return path.Join(workDir, repo, "clone", "clone.json")
-}
-
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
 	Short: "Clone all repos targeted by init",
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
+		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -66,8 +61,8 @@ var cloneCmd = &cobra.Command{
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
 			}
-			outputPath := cloneOutputPath(r.Name)
-			cloneWorkDir := filepath.Dir(outputPath)
+			cloneOutputPath := outputPath(r.Name, "clone")
+			cloneWorkDir := filepath.Dir(cloneOutputPath)
 			if err := os.MkdirAll(cloneWorkDir, 0755); err != nil {
 				log.Fatal(err)
 			}
@@ -80,7 +75,7 @@ var cloneCmd = &cobra.Command{
 				log.Printf("cloning: %s", cloneInput.GitURL)
 				output, err := clone.Clone(ctx, cloneInput)
 				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, outputPath)
+				writeJSON(output, cloneOutputPath)
 				if err != nil {
 					eg.Error(err)
 					return

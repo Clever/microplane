@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
@@ -17,10 +16,6 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func pushOutputPath(repo string) string {
-	return path.Join(workDir, repo, "push", "push.json")
-}
-
 var pushFlagAssignee string
 
 var pushCmd = &cobra.Command{
@@ -29,7 +24,7 @@ var pushCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
+		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -65,14 +60,14 @@ var pushCmd = &cobra.Command{
 				continue
 			}
 			var planOutput plan.Output
-			if loadJSON(planOutputPath(r.Name), &planOutput) != nil || !planOutput.Success {
+			if loadJSON(outputPath(r.Name, "plan"), &planOutput) != nil || !planOutput.Success {
 				log.Printf("skipping %s, must successfully plan first", r.Name)
 				continue
 			}
 			commitMessage = planOutput.CommitMessage
 			org = r.Owner
-			outputPath := pushOutputPath(r.Name)
-			pushWorkDir := filepath.Dir(outputPath)
+			pushOutputPath := outputPath(r.Name, "push")
+			pushWorkDir := filepath.Dir(pushOutputPath)
 			if err := os.MkdirAll(pushWorkDir, 0755); err != nil {
 				log.Fatal(err)
 			}
@@ -85,7 +80,7 @@ var pushCmd = &cobra.Command{
 				log.Printf("pushing: %s", input)
 				output, err := push.Push(ctx, input)
 				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, outputPath)
+				writeJSON(output, pushOutputPath)
 				if err != nil {
 					eg.Error(err)
 					return

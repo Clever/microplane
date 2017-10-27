@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/clone"
@@ -15,10 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/semaphore"
 )
-
-func planOutputPath(repo string) string {
-	return path.Join(workDir, repo, "plan", "plan.json")
-}
 
 var planFlagBranch string
 var planFlagMessage string
@@ -35,7 +30,7 @@ var planCmd = &cobra.Command{
 		}
 
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
+		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -77,12 +72,12 @@ var planCmd = &cobra.Command{
 				continue
 			}
 			var cloneOutput clone.Output
-			if loadJSON(cloneOutputPath(r.Name), &cloneOutput) != nil || !cloneOutput.Success {
+			if loadJSON(outputPath(r.Name, "clone"), &cloneOutput) != nil || !cloneOutput.Success {
 				log.Printf("skipping %s, must successfully clone first", r.Name)
 				continue
 			}
-			outputPath := planOutputPath(r.Name)
-			planWorkDir := filepath.Dir(outputPath)
+			planOutputPath := outputPath(r.Name, "plan")
+			planWorkDir := filepath.Dir(planOutputPath)
 			if err := os.MkdirAll(planWorkDir, 0755); err != nil {
 				log.Fatal(err)
 			}
@@ -95,7 +90,7 @@ var planCmd = &cobra.Command{
 				log.Printf("planning: %s", input)
 				output, err := plan.Plan(ctx, input)
 				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, outputPath)
+				writeJSON(output, planOutputPath)
 				if err != nil {
 					eg.Error(err)
 					return
