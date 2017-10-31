@@ -78,8 +78,8 @@ func printStatus(repos []string) {
 		status, details := getRepoStatus(r)
 		d2 := strings.TrimSpace(details)
 		d3 := strings.Join(strings.Split(d2, "\n"), " ")
-		if len(d3) > 40 {
-			d3 = d3[:60] + "..."
+		if len(d3) > 100 {
+			d3 = d3[:100] + "..."
 		}
 		fmt.Fprintln(out, joinWithTab(r, status, d3))
 	}
@@ -109,6 +109,7 @@ func getRepoStatus(repo string) (status, details string) {
 		return
 	}
 	status = "pushed"
+	details = pushOutput.String()
 
 	var mergeOutput merge.Output
 	if !(loadJSON(mergeOutputPath(repo), &mergeOutput) == nil && mergeOutput.Success) {
