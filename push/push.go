@@ -95,7 +95,7 @@ func Push(ctx context.Context, input Input) (Output, error) {
 func findOrCreatePR(ctx context.Context, client *github.Client, owner string, name string, pull *github.NewPullRequest) (*github.PullRequest, error) {
 	var pr *github.PullRequest
 	newPR, _, err := client.PullRequests.Create(ctx, owner, name, pull)
-	if strings.Contains(err.Error(), "pull request already exists") {
+	if err != nil && strings.Contains(err.Error(), "pull request already exists") {
 		existingPRs, _, err := client.PullRequests.List(ctx, owner, name, &github.PullRequestListOptions{
 			Head: *pull.Head,
 			Base: *pull.Base,
