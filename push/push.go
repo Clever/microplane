@@ -38,10 +38,29 @@ type Input struct {
 
 // Output from Push()
 type Output struct {
-	Success           bool
-	CommitSHA         string
-	PullRequestURL    string
-	PullRequestNumber int
+	Success                   bool
+	CommitSHA                 string
+	PullRequestURL            string
+	PullRequestNumber         int
+	PullRequestCombinedStatus string // failure, pending, or success
+	PullRequestAssignee       string
+}
+
+func (o Output) String() string {
+	s := "status:"
+	switch o.PullRequestCombinedStatus {
+	case "failure":
+		s += "❌"
+	case "pending":
+		s += "🕐"
+	case "success":
+		s += "✅"
+	default:
+		s += "?"
+	}
+
+	s += fmt.Sprintf("  assignee:%s %s", o.PullRequestAssignee, o.PullRequestURL)
+	return s
 }
 
 // Push pushes the commit to Github and opens a pull request
@@ -87,9 +106,23 @@ func Push(ctx context.Context, input Input) (Output, error) {
 			return Output{Success: false}, err
 		}
 	}
+
+	// get combined commit status
+	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
+	if err != nil {
+		return Output{Success: false}, err
+	}
+
 	// TODO: if pr title != PRMessage, update it
 
-	return Output{Success: true, CommitSHA: *pr.Head.SHA, PullRequestNumber: *pr.Number, PullRequestURL: *pr.HTMLURL}, nil
+	return Output{
+		Success:                   true,
+		CommitSHA:                 *pr.Head.SHA,
+		PullRequestNumber:         *pr.Number,
+		PullRequestURL:            *pr.HTMLURL,
+		PullRequestCombinedStatus: *cs.State,
+		PullRequestAssignee:       input.PRAssignee,
+	}, nil
 }
 
 func findOrCreatePR(ctx context.Context, client *github.Client, owner string, name string, pull *github.NewPullRequest) (*github.PullRequest, error) {
