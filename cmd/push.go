@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -56,6 +58,8 @@ var pushCmd = &cobra.Command{
 		ctx := context.Background()
 		var eg errgroup.Group
 		parallelLimit := semaphore.NewWeighted(10)
+		var commitMessage string
+		var org string
 		for _, r := range initOutput.Repos {
 			if singleRepo != "" && r.Name != singleRepo {
 				continue
@@ -65,6 +69,8 @@ var pushCmd = &cobra.Command{
 				log.Printf("skipping %s, must successfully plan first", r.Name)
 				continue
 			}
+			commitMessage = planOutput.CommitMessage
+			org = r.Owner
 			outputPath := pushOutputPath(r.Name)
 			pushWorkDir := filepath.Dir(outputPath)
 			if err := os.MkdirAll(pushWorkDir, 0755); err != nil {
@@ -98,6 +104,8 @@ var pushCmd = &cobra.Command{
 			// TODO: dig into errors and display them with more detail
 			log.Fatal(err)
 		}
-
+		query := fmt.Sprintf("org:%s \"%s\" is:open", org, commitMessage)
+		openPullRequestsURL := fmt.Sprintf("https://github.com/pulls?q=%s", url.QueryEscape(query))
+		log.Printf("Open the following URL to view your PRs: %s", openPullRequestsURL)
 	},
 }

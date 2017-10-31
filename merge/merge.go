@@ -84,5 +84,11 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 		return Output{Success: false}, fmt.Errorf("failed to merge: %s", result.GetMessage())
 	}
 
+	// Delete the branch
+	_, err = client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
+	if err != nil {
+		return Output{Success: false}, err
+	}
+
 	return Output{Success: true, MergeCommitSHA: result.GetSHA()}, nil
 }
