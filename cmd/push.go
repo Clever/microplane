@@ -85,6 +85,7 @@ var pushCmd = &cobra.Command{
 					return
 				}
 			}(push.Input{
+				RepoName:   r.Name,
 				PlanDir:    planOutput.PlanDir,
 				WorkDir:    pushWorkDir,
 				PRMessage:  planOutput.CommitMessage,
