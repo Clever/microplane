@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -98,6 +99,9 @@ var planCmd = &cobra.Command{
 				if err != nil {
 					eg.Error(err)
 					return
+				}
+				if singleRepo != "" {
+					fmt.Println(output.GitDiff)
 				}
 			}(plan.Input{
 				RepoName:      r.Name,
