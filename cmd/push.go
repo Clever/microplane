@@ -21,8 +21,6 @@ func pushOutputPath(repo string) string {
 	return path.Join(workDir, repo, "push", "push.json")
 }
 
-var pushFlagAssignee string
-
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Push planned changes",

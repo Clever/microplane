@@ -13,6 +13,8 @@ type Input struct {
 	WorkDir string
 	// GitURL to clone.
 	GitURL string
+	// Force a clone even if already exists (useful for updating in case of changes to master)
+	Force bool
 }
 
 type Output struct {
@@ -29,7 +31,13 @@ func Clone(ctx context.Context, input Input) (Output, error) {
 	cloneIntoDir := path.Join(input.WorkDir, "cloned")
 	if _, err := os.Stat(cloneIntoDir); err == nil {
 		// already cloned
-		return Output{Success: true, ClonedIntoDir: cloneIntoDir}, nil
+		if input.Force {
+			if err := os.RemoveAll(cloneIntoDir); err != nil {
+				return Output{Success: false}, err
+			}
+		} else {
+			return Output{Success: true, ClonedIntoDir: cloneIntoDir}, nil
+		}
 	}
 
 	cmd := exec.CommandContext(ctx, "git", "clone", input.GitURL, cloneIntoDir)

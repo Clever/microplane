@@ -59,6 +59,8 @@ var cloneCmd = &cobra.Command{
 			}
 		}
 
+		force, _ := cmd.Flags().GetBool("force")
+
 		ctx := context.Background()
 		var eg errgroup.Group
 		parallelLimit := semaphore.NewWeighted(10)
@@ -88,6 +90,7 @@ var cloneCmd = &cobra.Command{
 			}(clone.Input{
 				WorkDir: cloneWorkDir,
 				GitURL:  r.CloneURL,
+				Force:   force,
 			})
 		}
 		if err := eg.Wait(); err != nil {

@@ -28,16 +28,18 @@ func init() {
 
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
+	cloneCmd.Flags().BoolP("force", "f", false, "Force a clone even if already cloned")
+
 	rootCmd.AddCommand(docsCmd)
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(mergeCmd)
 
 	rootCmd.AddCommand(planCmd)
-	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
-	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
+	planCmd.Flags().StringP("branch", "b", "", "Git branch to commit to")
+	planCmd.Flags().StringP("message", "m", "", "Commit message")
 
 	rootCmd.AddCommand(pushCmd)
-	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
+	pushCmd.Flags().StringP("assignee", "a", "", "Github user to assign the PR to")
 
 	rootCmd.AddCommand(statusCmd)
 

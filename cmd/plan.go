@@ -20,9 +20,6 @@ func planOutputPath(repo string) string {
 	return path.Join(workDir, repo, "plan", "plan.json")
 }
 
-var planFlagBranch string
-var planFlagMessage string
-
 var planCmd = &cobra.Command{
 	Use:   "plan [cmd] [args...]",
 	Args:  cobra.MinimumNArgs(1),
