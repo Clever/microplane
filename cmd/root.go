@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"context"
 	"log"
 	"os"
-	"os/exec"
-	"os/user"
-	"path"
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
@@ -67,26 +63,6 @@ func Execute(version string) error {
 		if initOutput.Version != cliVersion {
 			log.Fatalf("A workdir (%s) exists, created with microplane version %s. This is incompatible with your version %s. Either run again using a compatible version, or remove the workdir and restart.", workDir, initOutput.Version, version)
 		}
-	}
-
-	// Verify `hub` is installed
-	execCmd := exec.CommandContext(context.Background(), "which", "hub")
-	_, err = execCmd.CombinedOutput()
-	if err != nil {
-		log.Fatalf("hub (github.com/github/hub) is required. Please install hub and verify it's in your path")
-	}
-
-	// Verify `hub` is configured (at least that it has a config file)
-	user, err := user.Current()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if _, err := os.Stat(path.Join(user.HomeDir, ".config/hub")); err != nil {
-		log.Fatalf("hub (github.com/github/hub) is not yet configured: ~/.config/hub does not exist. Please create this file with the following contents: \n\n" +
-			`github.com:
-- user: <your GH user>
-  oauth_token: <your token>
-  protocol: https`)
 	}
 
 	return rootCmd.Execute()
