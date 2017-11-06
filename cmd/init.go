@@ -17,11 +17,13 @@ func initOutputPath() string {
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
 	Short: "Initialize a microplane workflow",
-	Long: `Initialize a microplane workflow. It targets repos based on a Github Search query. For example
+	Long: `Initialize a microplane workflow. It targets repos based on a Github Code Search query. For example
 
-$ mp init "org:Clever path:circle.yml"
+$ mp init "org:Clever filename:circle.yml"
 
-would target all Clever repos with a circle.yml file.`,
+would target all Clever repos with a circle.yml file.
+
+See https://help.github.com/articles/searching-code/ for more details about the syntax.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
