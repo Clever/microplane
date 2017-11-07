@@ -53,9 +53,8 @@ func Initialize(input Input) (Output, error) {
 
 // githubSearch queries github and returns a list of matching repos
 //
-// Search Syntax:
-// https://help.github.com/articles/searching-repositories/#search-within-a-users-or-organizations-repositories
-// https://help.github.com/articles/understanding-the-search-syntax/
+// GitHub Code Search Syntax:
+// https://help.github.com/articles/searching-code/
 func githubSearch(query string) ([]Repo, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
