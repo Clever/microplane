@@ -34,14 +34,16 @@ var statusCmd = &cobra.Command{
 		singleRepo, err := cmd.Flags().GetString("repo")
 		if err == nil && singleRepo != "" {
 			valid := false
+			validRepoNames := []string{}
 			for _, r := range initOutput.Repos {
 				if r.Name == singleRepo {
 					valid = true
 					break
 				}
+				validRepoNames = append(validRepoNames, r.Name)
 			}
 			if !valid {
-				log.Fatalf("%s not a targeted repo name", singleRepo) // TODO: showing valid repo names would be helpful
+				log.Fatalf("%s not a targeted repo name (valid target repos are: %s)", singleRepo, strings.Join(validRepoNames, ", "))
 			}
 		}
 
