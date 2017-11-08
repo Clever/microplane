@@ -3,16 +3,11 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"path"
 
 	"github.com/Clever/microplane/initialize"
 
 	"github.com/spf13/cobra"
 )
-
-func initOutputPath() string {
-	return path.Join(workDir, "init.json")
-}
 
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
@@ -36,7 +31,7 @@ See https://help.github.com/articles/searching-code/ for more details about the 
 			log.Fatal(err)
 		}
 
-		err = writeJSON(output, initOutputPath())
+		err = writeJSON(output, outputPath("", "init"))
 		if err != nil {
 			log.Fatal(err)
 		}

@@ -20,7 +20,7 @@ var statusCmd = &cobra.Command{
 	Short: "Status shows a workflow's progress",
 	Run: func(cmd *cobra.Command, args []string) {
 		// find files and folders to explain the status of each repo
-		initPath := initOutputPath()
+		initPath := outputPath("", "init")
 
 		if _, err := os.Stat(initPath); os.IsNotExist(err) {
 			log.Fatalf("must run init first: %s\n", err.Error())
@@ -34,14 +34,16 @@ var statusCmd = &cobra.Command{
 		singleRepo, err := cmd.Flags().GetString("repo")
 		if err == nil && singleRepo != "" {
 			valid := false
+			validRepoNames := []string{}
 			for _, r := range initOutput.Repos {
 				if r.Name == singleRepo {
 					valid = true
 					break
 				}
+				validRepoNames = append(validRepoNames, r.Name)
 			}
 			if !valid {
-				log.Fatalf("%s not a targeted repo name", singleRepo) // TODO: showing valid repo names would be helpful
+				log.Fatalf("%s not a targeted repo name (valid target repos are: %s)", singleRepo, strings.Join(validRepoNames, ", "))
 			}
 		}
 
@@ -90,13 +92,13 @@ func getRepoStatus(repo string) (status, details string) {
 	status = "initialized"
 	details = ""
 	var cloneOutput clone.Output
-	if !(loadJSON(cloneOutputPath(repo), &cloneOutput) == nil && cloneOutput.Success) {
+	if !(loadJSON(outputPath(repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
 		return
 	}
 	status = "cloned"
 
 	var planOutput plan.Output
-	if !(loadJSON(planOutputPath(repo), &planOutput) == nil && planOutput.Success) {
+	if !(loadJSON(outputPath(repo, "plan"), &planOutput) == nil && planOutput.Success) {
 		if planOutput.Details != "" {
 			details = "(plan error) " + planOutput.Details
 		}
@@ -105,14 +107,14 @@ func getRepoStatus(repo string) (status, details string) {
 	status = "planned"
 
 	var pushOutput push.Output
-	if !(loadJSON(pushOutputPath(repo), &pushOutput) == nil && pushOutput.Success) {
+	if !(loadJSON(outputPath(repo, "push"), &pushOutput) == nil && pushOutput.Success) {
 		return
 	}
 	status = "pushed"
 	details = pushOutput.String()
 
 	var mergeOutput merge.Output
-	if !(loadJSON(mergeOutputPath(repo), &mergeOutput) == nil && mergeOutput.Success) {
+	if !(loadJSON(outputPath(repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
 		return
 	}
 	status = "merged"

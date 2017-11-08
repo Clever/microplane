@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,16 +16,12 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
-func mergeOutputPath(repo string) string {
-	return path.Join(workDir, repo, "merge", "merge.json")
-}
-
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merge pushed changes",
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
-		if err := loadJSON(initOutputPath(), &initOutput); err != nil {
+		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
 			log.Fatal(err)
 		}
 
@@ -52,7 +47,7 @@ var mergeCmd = &cobra.Command{
 				continue
 			}
 			var pushOutput push.Output
-			if loadJSON(pushOutputPath(r.Name), &pushOutput) != nil || !pushOutput.Success {
+			if loadJSON(outputPath(r.Name, "push"), &pushOutput) != nil || !pushOutput.Success {
 				log.Printf("skipping %s, must successfully push first", r.Name)
 				continue
 			}
@@ -62,8 +57,8 @@ var mergeCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			outputPath := mergeOutputPath(r.Name)
-			mergeWorkDir := filepath.Dir(outputPath)
+			mergeOutputPath := outputPath(r.Name, "merge")
+			mergeWorkDir := filepath.Dir(mergeOutputPath)
 			if err := os.MkdirAll(mergeWorkDir, 0755); err != nil {
 				log.Fatal(err)
 			}
@@ -76,7 +71,7 @@ var mergeCmd = &cobra.Command{
 				log.Printf("merging: %v", input)
 				output, err := merge.Merge(ctx, input)
 				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, outputPath)
+				writeJSON(output, mergeOutputPath)
 				if err != nil {
 					eg.Error(err)
 					return
