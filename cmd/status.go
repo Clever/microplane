@@ -91,30 +91,51 @@ func printStatus(repos []string) {
 func getRepoStatus(repo string) (status, details string) {
 	status = "initialized"
 	details = ""
-	var cloneOutput clone.Output
+	var cloneOutput struct {
+		clone.Output
+		Error string
+	}
 	if !(loadJSON(outputPath(repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
+		if cloneOutput.Error != "" {
+			details = "(clone error) " + cloneOutput.Error
+		}
 		return
 	}
 	status = "cloned"
 
-	var planOutput plan.Output
+	var planOutput struct {
+		plan.Output
+		Error string
+	}
 	if !(loadJSON(outputPath(repo, "plan"), &planOutput) == nil && planOutput.Success) {
-		if planOutput.Details != "" {
-			details = "(plan error) " + planOutput.Details
+		if planOutput.Error != "" {
+			details = "(plan error) " + planOutput.Error
 		}
 		return
 	}
 	status = "planned"
 
-	var pushOutput push.Output
+	var pushOutput struct {
+		push.Output
+		Error string
+	}
 	if !(loadJSON(outputPath(repo, "push"), &pushOutput) == nil && pushOutput.Success) {
+		if pushOutput.Error != "" {
+			details = "(push error) " + pushOutput.Error
+		}
 		return
 	}
 	status = "pushed"
 	details = pushOutput.String()
 
-	var mergeOutput merge.Output
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
 	if !(loadJSON(outputPath(repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
+		if mergeOutput.Error != "" {
+			details = "(merge error) " + mergeOutput.Error
+		}
 		return
 	}
 	status = "merged"

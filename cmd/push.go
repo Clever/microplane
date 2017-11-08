@@ -79,12 +79,16 @@ var pushCmd = &cobra.Command{
 				defer eg.Done()
 				log.Printf("pushing: %s", input)
 				output, err := push.Push(ctx, input)
-				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, pushOutputPath)
 				if err != nil {
+					o := struct {
+						push.Output
+						Error string
+					}{output, err.Error()}
+					writeJSON(o, pushOutputPath)
 					eg.Error(err)
 					return
 				}
+				writeJSON(output, pushOutputPath)
 			}(push.Input{
 				RepoName:   r.Name,
 				PlanDir:    planOutput.PlanDir,

@@ -35,7 +35,6 @@ type Input struct {
 // Output for Plan
 type Output struct {
 	Success bool
-	Details string
 
 	PlanDir       string
 	GitDiff       string
@@ -54,8 +53,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	cmd := exec.CommandContext(ctx, "cp", "-r", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
 	cmd.Dir = input.RepoDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		details := string(output)
-		return Output{Success: false, Details: details}, errors.New(details)
+		return Output{Success: false}, errors.New(string(output))
 	}
 
 	// run the change command, git add, and git commit
@@ -70,8 +68,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 		// Set MICROPLANE_<X> convenience env vars, for use in user's script
 		execCmd.Env = append(os.Environ(), fmt.Sprintf("MICROPLANE_REPO=%s", input.RepoName))
 		if output, err := execCmd.CombinedOutput(); err != nil {
-			details := string(output)
-			return Output{Success: false, Details: details}, errors.New(details)
+			return Output{Success: false}, errors.New(string(output))
 		}
 	}
 
@@ -81,8 +78,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	gitDiffCmd.Dir = planDir
 	output, err := gitDiffCmd.CombinedOutput()
 	if err != nil {
-		details := string(output)
-		return Output{Success: false, Details: details}, errors.New(details)
+		return Output{Success: false}, errors.New(string(output))
 	}
 	gitDiff = string(output)
 
