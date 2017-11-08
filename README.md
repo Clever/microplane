@@ -14,7 +14,7 @@ Init => Clone => Plan => Push => Merge
 
 ## Usage
 
-See [per-command docs](docs/)
+See [per-command DOCTORcs](docs/)
 
 ## Data Model
 
