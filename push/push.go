@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -120,6 +121,15 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	for _, status := range cs.Statuses {
 		if status.Context != nil && *status.Context == "ci/circleci" && status.TargetURL != nil {
 			circleCIBuildURL = *status.TargetURL
+			// url has lots of ugly tracking query params, get rid of them
+			if parsedURL, err := url.Parse(circleCIBuildURL); err == nil {
+				query := parsedURL.Query()
+				query.Del("utm_campaign")
+				query.Del("utm_medium")
+				query.Del("utm_source")
+				parsedURL.RawQuery = query.Encode()
+				circleCIBuildURL = parsedURL.String()
+			}
 		}
 	}
 

@@ -78,8 +78,8 @@ func printStatus(repos []string) {
 		status, details := getRepoStatus(r)
 		d2 := strings.TrimSpace(details)
 		d3 := strings.Join(strings.Split(d2, "\n"), " ")
-		if len(d3) > 100 {
-			d3 = d3[:100] + "..."
+		if len(d3) > 150 {
+			d3 = d3[:150] + "..."
 		}
 		fmt.Fprintln(out, joinWithTab(r, status, d3))
 	}
