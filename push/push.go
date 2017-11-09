@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -44,6 +45,7 @@ type Output struct {
 	PullRequestNumber         int
 	PullRequestCombinedStatus string // failure, pending, or success
 	PullRequestAssignee       string
+	CircleCIBuildURL          string
 }
 
 func (o Output) String() string {
@@ -60,6 +62,9 @@ func (o Output) String() string {
 	}
 
 	s += fmt.Sprintf("  assignee:%s %s", o.PullRequestAssignee, o.PullRequestURL)
+	if o.CircleCIBuildURL != "" {
+		s += fmt.Sprintf(" %s", o.CircleCIBuildURL)
+	}
 	return s
 }
 
@@ -107,10 +112,25 @@ func Push(ctx context.Context, input Input) (Output, error) {
 		}
 	}
 
-	// get combined commit status
 	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
 	if err != nil {
 		return Output{Success: false}, err
+	}
+
+	var circleCIBuildURL string
+	for _, status := range cs.Statuses {
+		if status.Context != nil && *status.Context == "ci/circleci" && status.TargetURL != nil {
+			circleCIBuildURL = *status.TargetURL
+			// url has lots of ugly tracking query params, get rid of them
+			if parsedURL, err := url.Parse(circleCIBuildURL); err == nil {
+				query := parsedURL.Query()
+				query.Del("utm_campaign")
+				query.Del("utm_medium")
+				query.Del("utm_source")
+				parsedURL.RawQuery = query.Encode()
+				circleCIBuildURL = parsedURL.String()
+			}
+		}
 	}
 
 	// TODO: if pr title != PRMessage, update it
@@ -122,6 +142,7 @@ func Push(ctx context.Context, input Input) (Output, error) {
 		PullRequestURL:            *pr.HTMLURL,
 		PullRequestCombinedStatus: *cs.State,
 		PullRequestAssignee:       input.PRAssignee,
+		CircleCIBuildURL:          circleCIBuildURL,
 	}, nil
 }
 
