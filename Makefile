@@ -22,15 +22,11 @@ $(PKGS): golang-test-all-deps
 build:
 	@go build -ldflags "-X main.version=$(VERSION)" -o ./bin/$(EXECUTABLE)
 
-install_deps: $(GOPATH)/bin/dep
-	@$(GOPATH)/bin/dep ensure
-
 release:
 	@GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VERSION)" \
 		-o="$@/$(EXECUTABLE)-$(VERSION)-linux-amd64"
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VERSION)" \
 		-o="$@/$(EXECUTABLE)-$(VERSION)-darwin-amd64"
-
 
 install_deps: golang-dep-vendor-deps
 	$(call golang-dep-vendor)
