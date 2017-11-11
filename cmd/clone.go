@@ -74,12 +74,16 @@ var cloneCmd = &cobra.Command{
 				defer eg.Done()
 				log.Printf("cloning: %s", cloneInput.GitURL)
 				output, err := clone.Clone(ctx, cloneInput)
-				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, cloneOutputPath)
 				if err != nil {
+					o := struct {
+						clone.Output
+						Error string
+					}{output, err.Error()}
+					writeJSON(o, cloneOutputPath)
 					eg.Error(err)
 					return
 				}
+				writeJSON(output, cloneOutputPath)
 			}(clone.Input{
 				WorkDir: cloneWorkDir,
 				GitURL:  r.CloneURL,

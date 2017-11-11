@@ -70,12 +70,16 @@ var mergeCmd = &cobra.Command{
 				defer eg.Done()
 				log.Printf("merging: %v", input)
 				output, err := merge.Merge(ctx, input)
-				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, mergeOutputPath)
 				if err != nil {
+					o := struct {
+						merge.Output
+						Error string
+					}{output, err.Error()}
+					writeJSON(o, mergeOutputPath)
 					eg.Error(err)
 					return
 				}
+				writeJSON(output, mergeOutputPath)
 			}(merge.Input{
 				Org:       "Clever", // TODO
 				Repo:      r.Name,

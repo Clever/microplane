@@ -89,12 +89,16 @@ var planCmd = &cobra.Command{
 				defer eg.Done()
 				log.Printf("planning: %s", input)
 				output, err := plan.Plan(ctx, input)
-				// TODO: should we also write the error? only saving output means "status" command only has Success: true/false to work with
-				writeJSON(output, planOutputPath)
 				if err != nil {
+					o := struct {
+						plan.Output
+						Error string
+					}{output, err.Error()}
+					writeJSON(o, planOutputPath)
 					eg.Error(err)
 					return
 				}
+				writeJSON(output, planOutputPath)
 				if singleRepo != "" {
 					fmt.Println(output.GitDiff)
 				}
