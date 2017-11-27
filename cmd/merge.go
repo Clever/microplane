@@ -19,6 +19,7 @@ import (
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merge pushed changes",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {

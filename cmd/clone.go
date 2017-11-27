@@ -34,6 +34,7 @@ func writeJSON(obj interface{}, path string) error {
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
 	Short: "Clone all repos targeted by init",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		var initOutput initialize.Output
 		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
