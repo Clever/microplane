@@ -82,7 +82,7 @@ var mergeCmd = &cobra.Command{
 				}
 				writeJSON(output, mergeOutputPath)
 			}(merge.Input{
-				Org:       "Clever", // TODO
+				Org:       r.Owner,
 				Repo:      r.Name,
 				PRNumber:  prNumber,
 				CommitSHA: pushOutput.CommitSHA,
