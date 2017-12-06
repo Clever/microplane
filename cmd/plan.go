@@ -10,31 +10,35 @@ import (
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/plan"
-	"github.com/facebookgo/errgroup"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/semaphore"
 )
 
 var planFlagBranch string
 var planFlagMessage string
+
+// TODO: Pass these *not* via globals
+// these variables are set when the cmd starts running
+var (
+	branchName    string
+	commitMessage string
+	changeCmd     string
+	changeCmdArgs []string
+	isSingleRepo  bool
+)
 
 var planCmd = &cobra.Command{
 	Use:   "plan [cmd] [args...]",
 	Args:  cobra.MinimumNArgs(1),
 	Short: "Plan changes by running a command against cloned repos",
 	Run: func(cmd *cobra.Command, args []string) {
-		changeCmd := args[0]
-		var changeCmdArgs []string
+		var err error
+
+		changeCmd = args[0]
 		if len(args) > 1 {
 			changeCmdArgs = args[1:]
 		}
 
-		var initOutput initialize.Output
-		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
-			log.Fatal(err)
-		}
-
-		branchName, err := cmd.Flags().GetString("branch")
+		branchName, err = cmd.Flags().GetString("branch")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -42,7 +46,7 @@ var planCmd = &cobra.Command{
 			log.Fatal("--branch is required")
 		}
 
-		commitMessage, err := cmd.Flags().GetString("message")
+		commitMessage, err = cmd.Flags().GetString("message")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -50,70 +54,57 @@ var planCmd = &cobra.Command{
 			log.Fatal("--message is required")
 		}
 
-		singleRepo, err := cmd.Flags().GetString("repo")
-		if err == nil && singleRepo != "" {
-			valid := false
-			for _, r := range initOutput.Repos {
-				if r.Name == singleRepo {
-					valid = true
-					break
-				}
-			}
-			if !valid {
-				log.Fatalf("%s not a targeted repo name", singleRepo) // TODO: showing valid repo names would be helpful
-			}
+		repos, err := whichRepos(cmd)
+		if err != nil {
+			log.Fatal(err)
 		}
+		isSingleRepo = len(repos) == 1
 
-		ctx := context.Background()
-		var eg errgroup.Group
-		parallelLimit := semaphore.NewWeighted(10)
-		for _, r := range initOutput.Repos {
-			if singleRepo != "" && r.Name != singleRepo {
-				continue
-			}
-			var cloneOutput clone.Output
-			if loadJSON(outputPath(r.Name, "clone"), &cloneOutput) != nil || !cloneOutput.Success {
-				log.Printf("skipping %s, must successfully clone first", r.Name)
-				continue
-			}
-			planOutputPath := outputPath(r.Name, "plan")
-			planWorkDir := filepath.Dir(planOutputPath)
-			if err := os.MkdirAll(planWorkDir, 0755); err != nil {
-				log.Fatal(err)
-			}
-
-			eg.Add(1)
-			go func(input plan.Input) {
-				parallelLimit.Acquire(ctx, 1)
-				defer parallelLimit.Release(1)
-				defer eg.Done()
-				log.Printf("planning: %s", input)
-				output, err := plan.Plan(ctx, input)
-				if err != nil {
-					o := struct {
-						plan.Output
-						Error string
-					}{output, err.Error()}
-					writeJSON(o, planOutputPath)
-					eg.Error(err)
-					return
-				}
-				writeJSON(output, planOutputPath)
-				if singleRepo != "" {
-					fmt.Println(output.GitDiff)
-				}
-			}(plan.Input{
-				RepoName:      r.Name,
-				RepoDir:       cloneOutput.ClonedIntoDir,
-				WorkDir:       planWorkDir,
-				Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},
-				CommitMessage: commitMessage,
-				BranchName:    branchName,
-			})
-		}
-		if err := eg.Wait(); err != nil {
-			// TODO: dig into errors and display them with more detail
+		err = parallelize(repos, planOneRepo)
+		if err != nil {
 			log.Fatal(err)
 		}
 	},
+}
+
+func planOneRepo(r initialize.Repo, ctx context.Context) error {
+	log.Printf("planning: %s/%s", r.Owner, r.Name)
+
+	// Get previous step's output
+	var cloneOutput clone.Output
+	if loadJSON(outputPath(r.Name, "clone"), &cloneOutput) != nil || !cloneOutput.Success {
+		log.Printf("skipping %s/%s, must successfully clone first", r.Owner, r.Name)
+		return nil
+	}
+
+	// Prepare workdir for current step's output
+	planOutputPath := outputPath(r.Name, "plan")
+	planWorkDir := filepath.Dir(planOutputPath)
+	if err := os.MkdirAll(planWorkDir, 0755); err != nil {
+		return err
+	}
+
+	// Execute
+	input := plan.Input{
+		RepoName:      r.Name,
+		RepoDir:       cloneOutput.ClonedIntoDir,
+		WorkDir:       planWorkDir,
+		Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},
+		CommitMessage: commitMessage,
+		BranchName:    branchName,
+	}
+	output, err := plan.Plan(ctx, input)
+	if err != nil {
+		o := struct {
+			plan.Output
+			Error string
+		}{output, err.Error()}
+		writeJSON(o, planOutputPath)
+		return err
+	}
+	writeJSON(output, planOutputPath)
+	if isSingleRepo {
+		fmt.Println(output.GitDiff)
+	}
+	return nil
 }
