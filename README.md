@@ -21,7 +21,7 @@ First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this ca
 
 ## Usage
 
-_Note_: You'll need the `GITHUB_API_TOKEN` environment variable must be set.
+_Note_: The `GITHUB_API_TOKEN` environment variable must be set.
 This should be a [Github Token](https://github.com/settings/tokens) with `repo` scope.
 
 Microplane has an opinionated workflow for how you should manage git changes across many repos.
