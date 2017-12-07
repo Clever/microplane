@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/eapache/go-resiliency/retrier"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
@@ -48,26 +50,45 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 
 	client := github.NewClient(tc)
 
+	// Configure a retrier - exponential backoff upon hitting Github API rate limit errors
+	r := retrier.New(retrier.ExponentialBackoff(10, time.Second), retrier.WhitelistClassifier{
+		&github.RateLimitError{},
+		&github.AbuseRateLimitError{},
+	})
+	r.SetJitter(0.5)
+
 	// OK to merge?
 
 	// (1) Check if the PR is mergeable
-	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
+	var pr *github.PullRequest
+	err := r.Run(func() error {
+		var prErr error
+		pr, _, prErr = client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
+		return prErr
+	})
 	if err != nil {
-		return Output{}, err
+		return Output{Success: false}, err
 	}
+
 	if !pr.GetMergeable() {
-		return Output{}, fmt.Errorf("PR is not mergeable")
+		return Output{Success: false}, fmt.Errorf("PR is not mergeable")
 	}
 
 	// (2) Check commit status
-	opt := &github.ListOptions{}
-	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
+	var status *github.CombinedStatus
+	err = r.Run(func() error {
+		var csErr error
+		opt := &github.ListOptions{}
+		status, _, csErr = client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
+		return csErr
+	})
 	if err != nil {
-		return Output{}, err
+		return Output{Success: false}, err
 	}
+
 	state := status.GetState()
 	if state != "success" {
-		return Output{}, fmt.Errorf("status was not 'success', instead was '%s'", state)
+		return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", state)
 	}
 
 	// (3) check if PR has been rejected by a reviewer
@@ -76,16 +97,25 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 	// Merge the PR
 	options := &github.PullRequestOptions{}
 	commitMsg := ""
-	result, _, err := client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
+	var result *github.PullRequestMergeResult
+	err = r.Run(func() error {
+		var mergeErr error
+		result, _, mergeErr = client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
+		return mergeErr
+	})
 	if err != nil {
 		return Output{Success: false}, err
 	}
+
 	if !result.GetMerged() {
 		return Output{Success: false}, fmt.Errorf("failed to merge: %s", result.GetMessage())
 	}
 
 	// Delete the branch
-	_, err = client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
+	err = r.Run(func() error {
+		_, deleteErr := client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
+		return deleteErr
+	})
 	if err != nil {
 		return Output{Success: false}, err
 	}
