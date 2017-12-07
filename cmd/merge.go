@@ -11,86 +11,64 @@ import (
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/push"
-	"github.com/facebookgo/errgroup"
 	"github.com/spf13/cobra"
-	"golang.org/x/sync/semaphore"
 )
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merge pushed changes",
+	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
-		var initOutput initialize.Output
-		if err := loadJSON(outputPath("", "init"), &initOutput); err != nil {
+		repos, err := whichRepos(cmd)
+		if err != nil {
 			log.Fatal(err)
 		}
 
-		singleRepo, err := cmd.Flags().GetString("repo")
-		if err == nil && singleRepo != "" {
-			valid := false
-			for _, r := range initOutput.Repos {
-				if r.Name == singleRepo {
-					valid = true
-					break
-				}
-			}
-			if !valid {
-				log.Fatalf("%s not a targeted repo name", singleRepo) // TODO: showing valid repo names would be helpful
-			}
-		}
-
-		ctx := context.Background()
-		var eg errgroup.Group
-		parallelLimit := semaphore.NewWeighted(10)
-		for _, r := range initOutput.Repos {
-			if singleRepo != "" && r.Name != singleRepo {
-				continue
-			}
-			var pushOutput push.Output
-			if loadJSON(outputPath(r.Name, "push"), &pushOutput) != nil || !pushOutput.Success {
-				log.Printf("skipping %s, must successfully push first", r.Name)
-				continue
-			}
-			segments := strings.Split(pushOutput.PullRequestURL, "/")
-			prNumber, err := strconv.Atoi(strings.TrimSpace(segments[len(segments)-1]))
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			mergeOutputPath := outputPath(r.Name, "merge")
-			mergeWorkDir := filepath.Dir(mergeOutputPath)
-			if err := os.MkdirAll(mergeWorkDir, 0755); err != nil {
-				log.Fatal(err)
-			}
-
-			eg.Add(1)
-			go func(input merge.Input) {
-				parallelLimit.Acquire(ctx, 1)
-				defer parallelLimit.Release(1)
-				defer eg.Done()
-				log.Printf("merging: %v", input)
-				output, err := merge.Merge(ctx, input)
-				if err != nil {
-					o := struct {
-						merge.Output
-						Error string
-					}{output, err.Error()}
-					writeJSON(o, mergeOutputPath)
-					eg.Error(err)
-					return
-				}
-				writeJSON(output, mergeOutputPath)
-			}(merge.Input{
-				Org:       "Clever", // TODO
-				Repo:      r.Name,
-				PRNumber:  prNumber,
-				CommitSHA: pushOutput.CommitSHA,
-			})
-		}
-		if err := eg.Wait(); err != nil {
-			// TODO: dig into errors and display them with more detail
+		err = parallelize(repos, mergeOneRepo)
+		if err != nil {
 			log.Fatal(err)
 		}
-
 	},
+}
+
+func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
+	log.Printf("merging: %s/%s", r.Owner, r.Name)
+
+	// Get previous step's output
+	var pushOutput push.Output
+	if loadJSON(outputPath(r.Name, "push"), &pushOutput) != nil || !pushOutput.Success {
+		log.Printf("skipping %s/%s, must successfully push first", r.Owner, r.Name)
+		return nil
+	}
+	segments := strings.Split(pushOutput.PullRequestURL, "/")
+	prNumber, err := strconv.Atoi(strings.TrimSpace(segments[len(segments)-1]))
+	if err != nil {
+		return err
+	}
+
+	// Prepare workdir for current step's output
+	mergeOutputPath := outputPath(r.Name, "merge")
+	mergeWorkDir := filepath.Dir(mergeOutputPath)
+	if err := os.MkdirAll(mergeWorkDir, 0755); err != nil {
+		return err
+	}
+
+	// Execute
+	input := merge.Input{
+		Org:       r.Owner,
+		Repo:      r.Name,
+		PRNumber:  prNumber,
+		CommitSHA: pushOutput.CommitSHA,
+	}
+	output, err := merge.Merge(ctx, input)
+	if err != nil {
+		o := struct {
+			merge.Output
+			Error string
+		}{output, err.Error()}
+		writeJSON(o, mergeOutputPath)
+		return err
+	}
+	writeJSON(output, mergeOutputPath)
+	return nil
 }

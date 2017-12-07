@@ -42,6 +42,8 @@ type Output struct {
 	BranchName    string
 }
 
+// Plan creates a copy of the cloned repo and executes a command on it.
+// This allows the user to preview a change to the repo.
 func Plan(ctx context.Context, input Input) (Output, error) {
 	// create a copy of the cloned repo and run all commands there
 	// wipe out the directory in case Plan has been run previously
