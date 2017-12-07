@@ -42,7 +42,7 @@ At each step in the Microplane workflow, it only moves forward if the previous s
 We persist the progress of a Microplane run in the following local file structure.
 
 ```
-./mp/<target>/
+./mp/
   init.json
   repo1/
     clone/
