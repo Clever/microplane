@@ -8,6 +8,18 @@
   version = "v1.0.7"
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
+
+[[projects]]
+  name = "github.com/eapache/go-resiliency"
+  packages = ["retrier"]
+  revision = "6800482f2c813e689c88b7ed3282262385011890"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/facebookgo/errgroup"
   packages = ["."]
@@ -38,6 +50,12 @@
   version = "v1.0"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
   revision = "4048872b16cc0fc2c5fd9eacf0ed2c2fedaa0c8c"
@@ -54,6 +72,12 @@
   packages = ["."]
   revision = "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
   version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = ["assert"]
+  revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
+  version = "v1.1.4"
 
 [[projects]]
   branch = "master"
@@ -88,6 +112,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4b01ec6b93a68a87abe91216ede0c23e947e84d0c48295f7546797c33a79548e"
+  inputs-digest = "6153c9bbd44bfc724d11a947b61e1b6d8d61bdae1a8e5ce6e8cb4f7827ba6bee"
   solver-name = "gps-cdcl"
   solver-version = 1

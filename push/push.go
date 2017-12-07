@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/eapache/go-resiliency/retrier"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
@@ -96,23 +98,46 @@ func Push(ctx context.Context, input Input) (Output, error) {
 	client := github.NewClient(tc)
 	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
 	base := "master"
-	pr, err := findOrCreatePR(ctx, client, input.RepoOwner, input.RepoName, &github.NewPullRequest{
-		Title: &input.PRMessage,
-		Head:  &head,
-		Base:  &base,
+
+	// Configure a retrier - exponential backoff upon hitting Github API rate limit errors
+	r := retrier.New(retrier.ExponentialBackoff(10, time.Second), retrier.WhitelistClassifier{
+		&github.RateLimitError{},
+		&github.AbuseRateLimitError{},
+	})
+	r.SetJitter(0.5)
+
+	var pr *github.PullRequest
+	err = r.Run(func() error {
+		var prErr error
+		pr, prErr = findOrCreatePR(ctx, client, input.RepoOwner, input.RepoName, &github.NewPullRequest{
+			Title: &input.PRMessage,
+			Head:  &head,
+			Base:  &base,
+		})
+		return prErr
 	})
 	if err != nil {
 		return Output{Success: false}, err
 	}
+
 	if pr.Assignee == nil || pr.Assignee.Login == nil || *pr.Assignee.Login != input.PRAssignee {
-		_, _, err := client.Issues.AddAssignees(ctx, input.RepoOwner, input.RepoName,
-			*pr.Number, []string{input.PRAssignee})
+		err = r.Run(func() error {
+			var addErr error
+			_, _, addErr = client.Issues.AddAssignees(ctx, input.RepoOwner, input.RepoName,
+				*pr.Number, []string{input.PRAssignee})
+			return addErr
+		})
 		if err != nil {
 			return Output{Success: false}, err
 		}
 	}
 
-	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
+	var cs *github.CombinedStatus
+	err = r.Run(func() error {
+		var getErr error
+		cs, _, getErr = client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
+		return getErr
+	})
 	if err != nil {
 		return Output{Success: false}, err
 	}
