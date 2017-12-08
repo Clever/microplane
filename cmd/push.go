@@ -75,7 +75,7 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		BranchName: planOutput.BranchName,
 		RepoOwner:  r.Owner,
 	}
-	output, err := push.Push(ctx, input)
+	output, err := push.Push(ctx, input, githubLimiter)
 	if err != nil {
 		o := struct {
 			push.Output

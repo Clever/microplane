@@ -6,16 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/eapache/go-resiliency/retrier"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
-
-// Command represents a command to run.
-type Command struct {
-	Path string
-	Args []string
-}
 
 // Input to Push()
 type Input struct {
@@ -42,30 +35,19 @@ type Error struct {
 }
 
 // Merge an open PR in Github
-func Merge(ctx context.Context, input Input) (Output, error) {
+func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output, error) {
+	// Create Github Client
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
 	)
 	tc := oauth2.NewClient(ctx, ts)
-
 	client := github.NewClient(tc)
-
-	// Configure a retrier - exponential backoff upon hitting Github API rate limit errors
-	r := retrier.New(retrier.ExponentialBackoff(10, time.Second), retrier.WhitelistClassifier{
-		&github.RateLimitError{},
-		&github.AbuseRateLimitError{},
-	})
-	r.SetJitter(0.5)
 
 	// OK to merge?
 
 	// (1) Check if the PR is mergeable
-	var pr *github.PullRequest
-	err := r.Run(func() error {
-		var prErr error
-		pr, _, prErr = client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
-		return prErr
-	})
+	<-githubLimiter.C
+	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -75,13 +57,9 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 	}
 
 	// (2) Check commit status
-	var status *github.CombinedStatus
-	err = r.Run(func() error {
-		var csErr error
-		opt := &github.ListOptions{}
-		status, _, csErr = client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
-		return csErr
-	})
+	opt := &github.ListOptions{}
+	<-githubLimiter.C
+	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -97,12 +75,8 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 	// Merge the PR
 	options := &github.PullRequestOptions{}
 	commitMsg := ""
-	var result *github.PullRequestMergeResult
-	err = r.Run(func() error {
-		var mergeErr error
-		result, _, mergeErr = client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
-		return mergeErr
-	})
+	<-githubLimiter.C
+	result, _, err := client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -112,10 +86,8 @@ func Merge(ctx context.Context, input Input) (Output, error) {
 	}
 
 	// Delete the branch
-	err = r.Run(func() error {
-		_, deleteErr := client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
-		return deleteErr
-	})
+	<-githubLimiter.C
+	_, err = client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
 	if err != nil {
 		return Output{Success: false}, err
 	}
