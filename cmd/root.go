@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"time"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/spf13/cobra"
@@ -13,6 +14,10 @@ import (
 
 var workDir string
 var cliVersion string
+
+// Github's rate limit for authenticated requests is 5000 QPH = 83.3 QPM = 1.38 QPS = 720ms/query
+// We also use a global limiter to prevent concurrent requests, which trigger Github's abuse detection
+var githubLimiter = time.NewTicker(720 * time.Millisecond)
 
 var rootCmd = &cobra.Command{
 	Use:   "mp",

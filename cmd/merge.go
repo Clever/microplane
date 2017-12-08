@@ -60,7 +60,7 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		PRNumber:  prNumber,
 		CommitSHA: pushOutput.CommitSHA,
 	}
-	output, err := merge.Merge(ctx, input)
+	output, err := merge.Merge(ctx, input, githubLimiter)
 	if err != nil {
 		o := struct {
 			merge.Output
