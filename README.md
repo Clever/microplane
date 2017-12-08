@@ -11,7 +11,7 @@ _"the lemon is Github"_
 
 ### Download
 
-You can download a pre-built version of Microplane from the Github releases.
+You can download a pre-built version of Microplane from the [Github releases](https://github.com/Clever/microplane/releases).
 
 ### Build Locally
 
