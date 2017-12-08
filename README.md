@@ -1,7 +1,7 @@
 # microplane
 
 A CLI tool to make git changes across many repos, especially useful with Microservices.
-You can learn more about microplane in this [introductory blogpost](TODO).
+You can learn more about microplane in this [introductory blogpost](https://medium.com/@nathanleiby/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-6c451cf79f74).
 
 ![microplane](https://cdn.pixabay.com/photo/2013/07/12/14/16/lemon-148119_640.png)
 
