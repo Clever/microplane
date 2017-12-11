@@ -1,7 +1,7 @@
 # microplane
 
 A CLI tool to make git changes across many repos, especially useful with Microservices.
-You can learn more about microplane in this [introductory blogpost](https://medium.com/@nathanleiby/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-6c451cf79f74).
+You can learn more about microplane in this [introductory blogpost](https://medium.com/always-a-student/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-293ad7d418f0).
 
 ![microplane](https://cdn.pixabay.com/photo/2013/07/12/14/16/lemon-148119_640.png)
 
@@ -33,7 +33,7 @@ To make a change, use the following series of commands.
 4. [Push](docs/mp_push.md) - commit, push, and open a Pull Request
 5. [Merge](docs/mp_merge.md) - merge the PRs
 
-For an in-depth example, check out the [introductory blogpost](https://medium.com/@nathanleiby/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-6c451cf79f74).
+For an in-depth example, check out the [introductory blogpost](https://medium.com/always-a-student/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-293ad7d418f0).
 
 ## Implementation
 
