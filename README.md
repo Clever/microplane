@@ -33,16 +33,18 @@ To make a change, use the following series of commands.
 4. [Push](docs/mp_push.md) - commit, push, and open a Pull Request
 5. [Merge](docs/mp_merge.md) - merge the PRs
 
+For an in-depth example, check out the [introductory blogpost](https://medium.com/@nathanleiby/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-6c451cf79f74).
+
 ## Implementation
 
 Microplane parallelizes various git commands and API calls.
 
-At each step in the Microplane workflow, it only moves forward if the previous step was successful.
+At each step in the Microplane workflow, a repo only moves forward if the previous step for that repo was successful.
 
 We persist the progress of a Microplane run in the following local file structure.
 
 ```
-./mp/
+mp/
   init.json
   repo1/
     clone/
