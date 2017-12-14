@@ -101,8 +101,15 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output,
 	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
 	base := "master"
 
+	splitMsg := strings.SplitN(input.PRMessage, "\n", 2)
+	title := splitMsg[0]
+	body := ""
+	if len(splitMsg) == 2 {
+		body = splitMsg[1]
+	}
 	pr, err := findOrCreatePR(ctx, client, input.RepoOwner, input.RepoName, &github.NewPullRequest{
-		Title: &input.PRMessage,
+		Title: &title,
+		Body:  &body,
 		Head:  &head,
 		Base:  &base,
 	}, githubLimiter)
