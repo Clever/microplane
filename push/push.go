@@ -147,8 +147,6 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output,
 		}
 	}
 
-	// TODO: if pr title != PRMessage, update it
-
 	return Output{
 		Success:                   true,
 		CommitSHA:                 *pr.Head.SHA,
@@ -176,10 +174,26 @@ func findOrCreatePR(ctx context.Context, client *github.Client, owner string, na
 			return nil, errors.New("unexpected: found more than 1 PR for branch")
 		}
 		pr = existingPRs[0]
+
+		// If needed, update PR title and body
+		if different(pr.Title, pull.Title) || different(pr.Body, pull.Body) {
+			pr.Title = pull.Title
+			pr.Body = pull.Body
+			<-githubLimiter.C
+			pr, _, err = client.PullRequests.Edit(ctx, owner, name, *pr.Number, pr)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 	} else if err != nil {
 		return nil, err
 	} else {
 		pr = newPR
 	}
 	return pr, nil
+}
+
+func different(s1, s2 *string) bool {
+	return s1 != nil && s2 != nil && *s1 != *s2
 }
