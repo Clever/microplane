@@ -14,6 +14,7 @@ import (
 	"github.com/Clever/microplane/push"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/waigani/diffparser"
 )
 
 var statusCmd = &cobra.Command{
@@ -115,6 +116,10 @@ func getRepoStatus(repo string) (status, details string) {
 		return
 	}
 	status = "planned"
+	diff, err := diffparser.Parse(planOutput.GitDiff)
+	if err == nil {
+		details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
+	}
 
 	var pushOutput struct {
 		push.Output
