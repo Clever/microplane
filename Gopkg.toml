@@ -37,6 +37,11 @@
   branch = "master"
   name = "github.com/facebookgo/errgroup"
 
+# Using a fork, awaiting PR: https://github.com/waigani/diffparser/pull/9
+[[constraint]]
+  name = "github.com/nathanleiby/diffparser"
+  branch = "master"
+
 [[constraint]]
   branch = "master"
   name = "golang.org/x/sync"

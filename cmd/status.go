@@ -13,8 +13,8 @@ import (
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
 	"github.com/fatih/color"
+	"github.com/nathanleiby/diffparser"
 	"github.com/spf13/cobra"
-	"github.com/waigani/diffparser"
 )
 
 var statusCmd = &cobra.Command{

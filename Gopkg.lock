@@ -68,6 +68,12 @@
   version = "v0.0.3"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/nathanleiby/diffparser"
+  packages = ["."]
+  revision = "936553ce5db1b73e63cbcd7546416d13538e8d85"
+
+[[projects]]
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
   revision = "792786c7400a136282c1664665ae0a8db921c6c2"
@@ -96,12 +102,6 @@
   packages = ["assert"]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/waigani/diffparser"
-  packages = ["."]
-  revision = "6198bead10008c43fcba66f16addbf23d6301ce9"
 
 [[projects]]
   branch = "master"
@@ -142,6 +142,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5286b26c9e73af39b33bb5ee44de35f60e82b7704bc6f4273239c624779dc1ba"
+  inputs-digest = "4794c55e2cf557ed5f3cade9ed34703693efa60880ecf8b444717d641fc0e8dc"
   solver-name = "gps-cdcl"
   solver-version = 1
