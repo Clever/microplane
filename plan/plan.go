@@ -52,7 +52,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	if err := os.RemoveAll(planDir); err != nil {
 		return Output{Success: false}, fmt.Errorf("could not clear directory %s", planDir)
 	}
-	cmd := exec.CommandContext(ctx, "cp", "-r", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
+	cmd := exec.CommandContext(ctx, "cp", "-a", "./.", planDir) // "./." copies all the contents of the current directory into the target directory
 	cmd.Dir = input.RepoDir
 	if output, err := cmd.CombinedOutput(); err != nil {
 		return Output{Success: false}, errors.New(string(output))
