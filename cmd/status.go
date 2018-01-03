@@ -12,6 +12,7 @@ import (
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -97,7 +98,7 @@ func getRepoStatus(repo string) (status, details string) {
 	}
 	if !(loadJSON(outputPath(repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
 		if cloneOutput.Error != "" {
-			details = "(clone error) " + cloneOutput.Error
+			details = color.RedString("(clone error) ") + cloneOutput.Error
 		}
 		return
 	}
@@ -109,7 +110,7 @@ func getRepoStatus(repo string) (status, details string) {
 	}
 	if !(loadJSON(outputPath(repo, "plan"), &planOutput) == nil && planOutput.Success) {
 		if planOutput.Error != "" {
-			details = "(plan error) " + planOutput.Error
+			details = color.RedString("(plan error) ") + planOutput.Error
 		}
 		return
 	}
@@ -121,7 +122,7 @@ func getRepoStatus(repo string) (status, details string) {
 	}
 	if !(loadJSON(outputPath(repo, "push"), &pushOutput) == nil && pushOutput.Success) {
 		if pushOutput.Error != "" {
-			details = "(push error) " + pushOutput.Error
+			details = color.RedString("(push error) ") + pushOutput.Error
 		}
 		return
 	}
@@ -134,7 +135,7 @@ func getRepoStatus(repo string) (status, details string) {
 	}
 	if !(loadJSON(outputPath(repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
 		if mergeOutput.Error != "" {
-			details = "(merge error) " + mergeOutput.Error
+			details = color.RedString("(merge error) ") + mergeOutput.Error
 		}
 		return
 	}
