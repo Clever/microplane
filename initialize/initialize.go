@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"log"
@@ -22,6 +23,7 @@ type Repo struct {
 type Input struct {
 	WorkDir string
 	Query   string
+	File    string
 	Version string
 }
 
@@ -40,15 +42,50 @@ func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 // Initialize searches Github for matching repos
 func Initialize(input Input) (Output, error) {
-	repos, err := githubSearch(input.Query)
-	if err != nil {
-		return Output{}, err
+	repos := []Repo{}
+	if input.Query != "" {
+		repos, err := githubSearch(input.Query)
+		if err != nil {
+			return Output{}, err
+		}
+		sort.Sort(ByName(repos))
+	} else if input.File != "" {
+		file, err := os.Open(input.File)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			// Try finding Org and Name
+			gitURL := scanner.Text()
+			owner, name, err := parseGitUrl(gitURL)
+			if err != nil {
+				return fmt.Errorf("error parsing %s -- %s", gitURL, err.Error())
+			}
+			repos = append(repos, Repo{
+				CloneURL: gitURL,
+				Owner:    owner,
+				Name:     name,
+			})
+		}
+
+		if err := scanner.Err(); err != nil {
+			return err
+		}
+	} else {
+		return Output{}, fmt.Errorf("invalid input: neither Query nor File was given")
 	}
-	sort.Sort(ByName(repos))
+
 	return Output{
 		Version: input.Version,
 		Repos:   repos,
 	}, nil
+}
+
+func parseGitUrl(url string) (owner string, name string, err error) {
+	return "owner", "name", nil
 }
 
 // githubSearch queries github and returns a list of matching repos
