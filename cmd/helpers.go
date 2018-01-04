@@ -5,12 +5,52 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/facebookgo/errgroup"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/semaphore"
 )
+
+type cobraRunE func(cmd *cobra.Command, args []string) error
+type cobraRun func(cmd *cobra.Command, args []string)
+
+// this wrapper allows for centralized error handling
+func runEWrapper(run cobraRunE) cobraRun {
+	return func(cmd *cobra.Command, args []string) {
+		if err := run(cmd, args); err != nil {
+			printErrorAndExit(cmd, err)
+		}
+	}
+}
+
+func printErrorAndExit(cmd *cobra.Command, err error) {
+	if err == nil {
+		return
+	}
+
+	switch err := err.(type) {
+	case UsageError:
+		log.Print(err)
+		fmt.Printf("\nUse `mp %s --help` for more information\n", cmd.Name())
+	default:
+		log.Printf("Error: %s", err)
+	}
+
+	// non-zero exit after error
+	os.Exit(1)
+}
+
+// UsageError is returned for incorrect usage of a command
+type UsageError struct {
+	msg string
+}
+
+func (e UsageError) Error() string {
+	return e.msg
+}
 
 func loadJSON(path string, obj interface{}) error {
 	bs, err := ioutil.ReadFile(path)
