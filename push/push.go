@@ -43,6 +43,8 @@ type Input struct {
 type Output struct {
 	Success                   bool
 	CommitSHA                 string
+	PRMessage                 string
+	PRAssignee                string
 	PullRequestURL            string
 	PullRequestNumber         int
 	PullRequestCombinedStatus string // failure, pending, or success
@@ -72,18 +74,9 @@ func (o Output) String() string {
 
 // Push pushes the commit to Github and opens a pull request
 func Push(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output, error) {
-	// Get the commit SHA from the last commit
-	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
-	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
-	gitLog.Dir = input.PlanDir
-	gitLogOutput, err := gitLog.CombinedOutput()
-	if err != nil {
-		return Output{Success: false}, errors.New(string(gitLogOutput))
-	}
-
 	// Push the commit
 	gitHeadBranch := fmt.Sprintf("HEAD:%s", input.BranchName)
-	cmd = Command{Path: "git", Args: []string{"push", "-f", "origin", gitHeadBranch}}
+	cmd := Command{Path: "git", Args: []string{"push", "-f", "origin", gitHeadBranch}}
 	gitPush := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 	gitPush.Dir = input.PlanDir
 	if output, err := gitPush.CombinedOutput(); err != nil {
@@ -150,6 +143,8 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output,
 	return Output{
 		Success:                   true,
 		CommitSHA:                 *pr.Head.SHA,
+		PRMessage:                 input.PRMessage,
+		PRAssignee:                input.PRAssignee,
 		PullRequestNumber:         *pr.Number,
 		PullRequestURL:            *pr.HTMLURL,
 		PullRequestCombinedStatus: *cs.State,

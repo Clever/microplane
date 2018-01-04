@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 )
 
 // Command represents a command to run.
@@ -39,6 +40,7 @@ type Output struct {
 	PlanDir       string
 	GitDiff       string
 	CommitMessage string
+	CommitSHA     string
 	BranchName    string
 }
 
@@ -84,11 +86,20 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	}
 	gitDiff = string(output)
 
+	// Get the commit SHA from the last commit
+	cmd = Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
+	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
+	gitLog.Dir = planDir
+	gitLogOutput, err := gitLog.CombinedOutput()
+	if err != nil {
+		return Output{Success: false}, errors.New(string(gitLogOutput))
+	}
+
 	return Output{
 		Success:       true,
 		PlanDir:       planDir,
 		GitDiff:       gitDiff,
 		BranchName:    input.BranchName,
-		CommitMessage: input.CommitMessage,
-	}, nil
+		CommitSHA:     strings.TrimSpace(string(gitLogOutput)),
+		CommitMessage: input.CommitMessage}, nil
 }

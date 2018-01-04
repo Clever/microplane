@@ -65,6 +65,18 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		return err
 	}
 
+	// Check if push already ran with same input; if so, don't re-run
+	// var pushOutput push.Output
+	// if loadJSON(outputPath(r.Name, "push"), &pushOutput) == nil && pushOutput.Success {
+	// 	// TODO: Don't compare commit SHA. Compare the diff
+	// 	if pushOutput.CommitSHA == planOutput.CommitSHA &&
+	// 		pushOutput.PRMessage == planOutput.CommitMessage &&
+	// 		pushOutput.PRAssignee == prAssignee {
+	// 		fmt.Println("short circuiting PUSH")
+	// 		return nil
+	// 	}
+	// }
+
 	// Execute
 	input := push.Input{
 		RepoName:   r.Name,
