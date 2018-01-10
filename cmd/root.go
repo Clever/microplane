@@ -33,7 +33,9 @@ func init() {
 	rootCmd.AddCommand(cloneCmd)
 	rootCmd.AddCommand(docsCmd)
 	rootCmd.AddCommand(initCmd)
+
 	rootCmd.AddCommand(mergeCmd)
+	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "", "Throttle number of merges, e.g. '10s' means 1 merge per 10 seconds")
 
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")

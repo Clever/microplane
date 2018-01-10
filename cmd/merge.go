@@ -7,12 +7,18 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/push"
 	"github.com/spf13/cobra"
 )
+
+var mergeFlagThrottle string
+var mergeThrottle string
+
+var mergeLimiter = time.NewTicker(1 * time.Millisecond)
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
@@ -22,6 +28,19 @@ var mergeCmd = &cobra.Command{
 		repos, err := whichRepos(cmd)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		mergeThrottle, err = cmd.Flags().GetString("throttle")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if mergeThrottle != "" {
+			// Try parsing it and updating the limiter
+			dur, err := time.ParseDuration(mergeThrottle)
+			if err != nil {
+				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
+			}
+			mergeLimiter = time.NewTicker(dur)
 		}
 
 		err = parallelize(repos, mergeOneRepo)
@@ -70,7 +89,7 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		PRNumber:  prNumber,
 		CommitSHA: pushOutput.CommitSHA,
 	}
-	output, err := merge.Merge(ctx, input, githubLimiter)
+	output, err := merge.Merge(ctx, input, githubLimiter, mergeLimiter)
 	if err != nil {
 		o := struct {
 			merge.Output
