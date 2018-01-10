@@ -15,10 +15,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CLI flags
 var mergeFlagThrottle string
-var mergeThrottle string
 
-var mergeLimiter = time.NewTicker(1 * time.Millisecond)
+// rate limits the # of PR merges per duration. used to prevent load on CI system
+var mergeThrottle *time.Ticker
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
@@ -30,17 +31,17 @@ var mergeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		mergeThrottle, err = cmd.Flags().GetString("throttle")
+		throttle, err := cmd.Flags().GetString("throttle")
 		if err != nil {
 			log.Fatal(err)
 		}
-		if mergeThrottle != "" {
+		if throttle != "" {
 			// Try parsing it and updating the limiter
-			dur, err := time.ParseDuration(mergeThrottle)
+			dur, err := time.ParseDuration(throttle)
 			if err != nil {
 				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
 			}
-			mergeLimiter = time.NewTicker(dur)
+			mergeThrottle = time.NewTicker(dur)
 		}
 
 		err = parallelize(repos, mergeOneRepo)
@@ -89,7 +90,7 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		PRNumber:  prNumber,
 		CommitSHA: pushOutput.CommitSHA,
 	}
-	output, err := merge.Merge(ctx, input, githubLimiter, mergeLimiter)
+	output, err := merge.Merge(ctx, input, githubLimiter, mergeThrottle)
 	if err != nil {
 		o := struct {
 			merge.Output
