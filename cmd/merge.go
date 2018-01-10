@@ -34,6 +34,16 @@ var mergeCmd = &cobra.Command{
 func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 	log.Printf("merging: %s/%s", r.Owner, r.Name)
 
+	// Exit early if already merged
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
+	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
+		log.Printf("already merged: %s/%s", r.Owner, r.Name)
+		return nil
+	}
+
 	// Get previous step's output
 	var pushOutput push.Output
 	if loadJSON(outputPath(r.Name, "push"), &pushOutput) != nil || !pushOutput.Success {

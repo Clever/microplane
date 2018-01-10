@@ -52,6 +52,10 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output
 		return Output{Success: false}, err
 	}
 
+	if pr.GetMerged() {
+		return Output{Success: true, MergeCommitSHA: pr.GetMergeCommitSHA()}, nil
+	}
+
 	if !pr.GetMergeable() {
 		return Output{Success: false}, fmt.Errorf("PR is not mergeable")
 	}
