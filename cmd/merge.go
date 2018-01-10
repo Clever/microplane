@@ -7,12 +7,19 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/push"
 	"github.com/spf13/cobra"
 )
+
+// CLI flags
+var mergeFlagThrottle string
+
+// rate limits the # of PR merges per duration. used to prevent load on CI system
+var mergeThrottle *time.Ticker
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
@@ -24,6 +31,19 @@ var mergeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		throttle, err := cmd.Flags().GetString("throttle")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if throttle != "" {
+			// Try parsing it and updating the limiter
+			dur, err := time.ParseDuration(throttle)
+			if err != nil {
+				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
+			}
+			mergeThrottle = time.NewTicker(dur)
+		}
+
 		err = parallelize(repos, mergeOneRepo)
 		if err != nil {
 			log.Fatal(err)
@@ -33,6 +53,16 @@ var mergeCmd = &cobra.Command{
 
 func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 	log.Printf("merging: %s/%s", r.Owner, r.Name)
+
+	// Exit early if already merged
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
+	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
+		log.Printf("already merged: %s/%s", r.Owner, r.Name)
+		return nil
+	}
 
 	// Get previous step's output
 	var pushOutput push.Output
@@ -60,7 +90,7 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		PRNumber:  prNumber,
 		CommitSHA: pushOutput.CommitSHA,
 	}
-	output, err := merge.Merge(ctx, input, githubLimiter)
+	output, err := merge.Merge(ctx, input, githubLimiter, mergeThrottle)
 	if err != nil {
 		o := struct {
 			merge.Output
