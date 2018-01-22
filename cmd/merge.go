@@ -17,6 +17,7 @@ import (
 
 // CLI flags
 var mergeFlagThrottle string
+var mergeFlagIgnoreReviewApproval bool
 
 // rate limits the # of PR merges per duration. used to prevent load on CI system
 var mergeThrottle *time.Ticker
@@ -52,7 +53,7 @@ var mergeCmd = &cobra.Command{
 }
 
 func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
-	log.Printf("merging: %s/%s", r.Owner, r.Name)
+	log.Printf("%s/%s - merging...", r.Owner, r.Name)
 
 	// Exit early if already merged
 	var mergeOutput struct {
@@ -60,14 +61,14 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		Error string
 	}
 	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
-		log.Printf("already merged: %s/%s", r.Owner, r.Name)
+		log.Printf("%s/%s - already merged", r.Owner, r.Name)
 		return nil
 	}
 
 	// Get previous step's output
 	var pushOutput push.Output
 	if loadJSON(outputPath(r.Name, "push"), &pushOutput) != nil || !pushOutput.Success {
-		log.Printf("skipping %s/%s, must successfully push first", r.Owner, r.Name)
+		log.Printf("%s/%s - skipping, must successfully push first", r.Owner, r.Name)
 		return nil
 	}
 	segments := strings.Split(pushOutput.PullRequestURL, "/")
@@ -85,13 +86,15 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 
 	// Execute
 	input := merge.Input{
-		Org:       r.Owner,
-		Repo:      r.Name,
-		PRNumber:  prNumber,
-		CommitSHA: pushOutput.CommitSHA,
+		Org:                   r.Owner,
+		Repo:                  r.Name,
+		PRNumber:              prNumber,
+		CommitSHA:             pushOutput.CommitSHA,
+		RequireReviewApproval: !mergeFlagIgnoreReviewApproval,
 	}
 	output, err := merge.Merge(ctx, input, githubLimiter, mergeThrottle)
 	if err != nil {
+		log.Printf("%s/%s - merge error: %s", r.Owner, r.Name, err.Error())
 		o := struct {
 			merge.Output
 			Error string

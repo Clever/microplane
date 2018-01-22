@@ -145,6 +145,7 @@ func getRepoStatus(repo string) (status, details string) {
 		return
 	}
 	status = "merged"
+	details = ""
 
 	return
 }
