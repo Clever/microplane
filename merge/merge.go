@@ -20,6 +20,10 @@ type Input struct {
 	PRNumber int
 	// CommitSHA for the commit which opened the above PR. Used to look up Commit status.
 	CommitSHA string
+	// RequireReviewApproval specifies if the PR must be approved before merging
+	// - must have at least 1 reviewer
+	// - all reviewers must have explicitly approved
+	RequireReviewApproval bool
 }
 
 // Output from Push()
@@ -55,6 +59,7 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLi
 	}
 
 	if pr.GetMerged() {
+		// Success! already merged
 		return Output{Success: true, MergeCommitSHA: pr.GetMergeCommitSHA()}, nil
 	}
 
@@ -63,9 +68,8 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLi
 	}
 
 	// (2) Check commit status
-	opt := &github.ListOptions{}
 	<-githubLimiter.C
-	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, opt)
+	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, &github.ListOptions{})
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -75,8 +79,19 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLi
 		return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", state)
 	}
 
-	// (3) check if PR has been rejected by a reviewer
-	// TODO
+	// (3) check if PR has been approved by a reviewer
+	<-githubLimiter.C
+	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Org, input.Repo, input.PRNumber, &github.ListOptions{})
+	if input.RequireReviewApproval {
+		if len(reviews) == 0 {
+			return Output{Success: false}, fmt.Errorf("PR awaiting review")
+		}
+		for _, r := range reviews {
+			if r.GetState() != "APPROVED" {
+				return Output{Success: false}, fmt.Errorf("PR is not approved. Review state is %s", r.GetState())
+			}
+		}
+	}
 
 	// Merge the PR
 	options := &github.PullRequestOptions{}
