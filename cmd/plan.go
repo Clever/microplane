@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
@@ -62,7 +63,7 @@ var planCmd = &cobra.Command{
 
 		err = parallelize(repos, planOneRepo)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("# errors = ", strings.Count(err.Error(), " | ")+1)
 		}
 	},
 }
