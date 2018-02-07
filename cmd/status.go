@@ -47,6 +47,7 @@ var statusCmd = &cobra.Command{
 			if !valid {
 				log.Fatalf("%s not a targeted repo name (valid target repos are: %s)", singleRepo, strings.Join(validRepoNames, ", "))
 			}
+			isSingleRepo = true
 		}
 
 		repos := []string{}
@@ -119,6 +120,9 @@ func getRepoStatus(repo string) (status, details string) {
 	diff, err := diffparser.Parse(planOutput.GitDiff)
 	if err == nil {
 		details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
+	}
+	if isSingleRepo {
+		fmt.Println(planOutput.GitDiff)
 	}
 
 	var pushOutput struct {
