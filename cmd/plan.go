@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/spf13/cobra"
 )
@@ -62,7 +64,7 @@ var planCmd = &cobra.Command{
 
 		err = parallelize(repos, planOneRepo)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("# errors = ", strings.Count(err.Error(), " | ")+1)
 		}
 	},
 }
@@ -74,6 +76,16 @@ func planOneRepo(r initialize.Repo, ctx context.Context) error {
 	var cloneOutput clone.Output
 	if loadJSON(outputPath(r.Name, "clone"), &cloneOutput) != nil || !cloneOutput.Success {
 		log.Printf("skipping %s/%s, must successfully clone first", r.Owner, r.Name)
+		return nil
+	}
+
+	// Exit early if already merged
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
+	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
+		log.Printf("%s/%s - already merged", r.Owner, r.Name)
 		return nil
 	}
 

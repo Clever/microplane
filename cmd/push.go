@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
 	"github.com/spf13/cobra"
@@ -50,6 +51,16 @@ var pushCmd = &cobra.Command{
 
 func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 	log.Printf("pushing: %s/%s", r.Owner, r.Name)
+
+	// Exit early if already merged
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
+	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
+		log.Printf("%s/%s - already merged", r.Owner, r.Name)
+		return nil
+	}
 
 	// Get previous step's output
 	var planOutput plan.Output

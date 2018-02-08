@@ -1,7 +1,7 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 0.2.0
+GOLANG_MK_VERSION := 0.3.2
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
@@ -18,7 +18,7 @@ define golang-version-check
 _ := $(if  \
 		$(shell  \
 			expr >/dev/null  \
-				`go version | cut -d" " -f3 | cut -c3- | cut -d. -f2`  \
+				`go version | cut -d" " -f3 | cut -c3- | cut -d. -f2 | sed -E 's/beta[0-9]+//'`  \
 				\>= `echo $(1) | cut -d. -f2`  \
 				\&  \
 				`go version | cut -d" " -f3 | cut -c3- | cut -d. -f1`  \
@@ -52,9 +52,16 @@ golang-dep-vendor-deps: bin/dep
 # golang-godep-vendor is a target for saving dependencies with the dep tool
 # to the vendor/ directory. All nested vendor/ directories are deleted via
 # the prune command.
+# In CI, -vendor-only is used to avoid updating the lock file.
+ifndef CI
 define golang-dep-vendor
-bin/dep ensure
+bin/dep ensure -v
 endef
+else
+define golang-dep-vendor
+bin/dep ensure -v -vendor-only
+endef
+endif
 
 # Golint is a tool for linting Golang code for common errors.
 GOLINT := $(GOPATH)/bin/golint
@@ -145,6 +152,19 @@ $(call golang-fmt,$(1))
 $(call golang-lint-strict,$(1))
 $(call golang-vet,$(1))
 $(call golang-test-strict,$(1))
+endef
+
+# golang-build: builds a golang binary. ensures CGO build is done during CI. This is needed to make a binary that works with a Docker alpine image.
+# arg1: pkg path
+# arg2: executable name
+define golang-build
+@echo "BUILDING..."
+@if [ -z "$$CI" ]; then \
+	go build -o bin/$(2) $(1); \
+else \
+	echo "-> Building CGO binary"; \
+	CGO_ENABLED=0 go build -installsuffix cgo -o bin/$(2) $(1); \
+fi;
 endef
 
 # golang-update-makefile downloads latest version of golang.mk
