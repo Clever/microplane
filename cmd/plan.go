@@ -32,6 +32,8 @@ var planCmd = &cobra.Command{
 	Use:   "plan [cmd] [args...]",
 	Args:  cobra.MinimumNArgs(1),
 	Short: "Plan changes by running a command against cloned repos",
+	Example: `mp plan -b microplaning -m 'microplane fun' -r app-service -- sh -c /absolute/path/to/script
+mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/path/to/script`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 
