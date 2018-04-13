@@ -14,8 +14,8 @@ mp plan [cmd] [args...] [flags]
 ### Examples
 
 ```
-mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/paht/to/script
-(You may need to add #!/bin/bash if your plan script is a shell script)
+mp plan -b microplaning -m 'microplane fun' -r app-service -- sh -c /absolute/path/to/script
+mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/path/to/script
 ```
 
 ### Options
