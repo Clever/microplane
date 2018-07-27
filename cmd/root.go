@@ -43,6 +43,7 @@ func init() {
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
 
 	rootCmd.AddCommand(pushCmd)
+	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "1ms", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
 	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
 
 	rootCmd.AddCommand(statusCmd)

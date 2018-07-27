@@ -19,7 +19,7 @@ import (
 var mergeFlagThrottle string
 var mergeFlagIgnoreReviewApproval bool
 
-// rate limits the # of PR merges per duration. used to prevent load on CI system
+// rate limits the # of PR merges. used to prevent load on CI system
 var mergeThrottle *time.Ticker
 
 var mergeCmd = &cobra.Command{
