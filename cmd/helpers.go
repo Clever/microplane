@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/facebookgo/errgroup"
@@ -28,11 +29,14 @@ func writeJSON(obj interface{}, path string) error {
 	return ioutil.WriteFile(path, b, 0644)
 }
 
+// TODO: Make parallelism configurable?
+var parallelism = 10
+
 // parallelize take a list of repos and applies a function (clone, plan, ...) to them
 func parallelize(repos []initialize.Repo, f func(initialize.Repo, context.Context) error) error {
 	ctx := context.Background()
 	var eg errgroup.Group
-	parallelLimit := semaphore.NewWeighted(10)
+	parallelLimit := semaphore.NewWeighted(parallelism)
 	for _, r := range repos {
 		eg.Add(1)
 		go func(repo initialize.Repo) {
@@ -77,4 +81,12 @@ func whichRepos(cmd *cobra.Command) ([]initialize.Repo, error) {
 	}
 	// TODO: showing valid repo names would be helpful
 	return []initialize.Repo{}, fmt.Errorf("%s not a targeted repo name", singleRepo)
+}
+
+// outputPath helper constructs the output path string for each step
+func outputPath(repoName string, step string) string {
+	if step == "init" {
+		return path.Join(workDir, "init.json")
+	}
+	return path.Join(workDir, repoName, step, fmt.Sprintf("%s.json", step))
 }

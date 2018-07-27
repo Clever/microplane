@@ -1,22 +1,20 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/tabwriter"
 
-	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
-	"github.com/Clever/microplane/merge"
-	"github.com/Clever/microplane/plan"
-	"github.com/Clever/microplane/push"
-	"github.com/fatih/color"
-	"github.com/nathanleiby/diffparser"
 	"github.com/spf13/cobra"
 )
 
+// TODO: Move status to its own package
+// Parallelize, as all else
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status shows a workflow's progress",
@@ -91,65 +89,31 @@ func printStatus(repos []string) {
 	out.Flush()
 }
 
-func getRepoStatus(repo string) (status, details string) {
-	status = "initialized"
-	details = ""
-	var cloneOutput struct {
-		clone.Output
-		Error string
-	}
-	if !(loadJSON(outputPath(repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
-		if cloneOutput.Error != "" {
-			details = color.RedString("(clone error) ") + cloneOutput.Error
-		}
-		return
-	}
-	status = "cloned"
+func statusOneRepo(r initialize.Repo, ctx context.Context) error {
+	log.Printf("%s/%s - getting status...", r.Owner, r.Name)
 
-	var planOutput struct {
-		plan.Output
-		Error string
-	}
-	if !(loadJSON(outputPath(repo, "plan"), &planOutput) == nil && planOutput.Success) {
-		if planOutput.Error != "" {
-			details = color.RedString("(plan error) ") + planOutput.Error
-		}
-		return
-	}
-	status = "planned"
-	diff, err := diffparser.Parse(planOutput.GitDiff)
-	if err == nil {
-		details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
-	}
-	if isSingleRepo {
-		fmt.Println(planOutput.GitDiff)
+	// Prepare workdir for current step's output
+	statusOutputPath := outputPath(r.Name, "status")
+	statusWorkDir := filepath.Dir(statusOutputPath)
+	if err := os.MkdirAll(statusWorkDir, 0755); err != nil {
+		return err
 	}
 
-	var pushOutput struct {
-		push.Output
-		Error string
+	// Execute
+	input := status.Input{
+		Org:  r.Owner,
+		Repo: r.Name,
 	}
-	if !(loadJSON(outputPath(repo, "push"), &pushOutput) == nil && pushOutput.Success) {
-		if pushOutput.Error != "" {
-			details = color.RedString("(push error) ") + pushOutput.Error
-		}
-		return
+	output, err := status.Status(ctx, input, githubLimiter)
+	if err != nil {
+		log.Printf("%s/%s - status error: %s", r.Owner, r.Name, err.Error())
+		o := struct {
+			status.Output
+			Error string
+		}{output, err.Error()}
+		writeJSON(o, statusOutputPath)
+		return err
 	}
-	status = "pushed"
-	details = pushOutput.String()
-
-	var mergeOutput struct {
-		merge.Output
-		Error string
-	}
-	if !(loadJSON(outputPath(repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
-		if mergeOutput.Error != "" {
-			details = color.RedString("(merge error) ") + mergeOutput.Error
-		}
-		return
-	}
-	status = "merged"
-	details = ""
-
-	return
+	writeJSON(output, statusOutputPath)
+	return nil
 }

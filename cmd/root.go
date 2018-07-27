@@ -1,10 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 
@@ -77,12 +75,4 @@ func Execute(version string) error {
 	}
 
 	return rootCmd.Execute()
-}
-
-// outputPath helper constructs the output path string for each step
-func outputPath(repoName string, step string) string {
-	if step == "init" {
-		return path.Join(workDir, "init.json")
-	}
-	return path.Join(workDir, repoName, step, fmt.Sprintf("%s.json", step))
 }

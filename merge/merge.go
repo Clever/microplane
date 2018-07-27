@@ -82,6 +82,9 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLi
 	// (3) check if PR has been approved by a reviewer
 	<-githubLimiter.C
 	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Org, input.Repo, input.PRNumber, &github.ListOptions{})
+	if err != nil {
+		return Output{Success: false}, err
+	}
 	if input.RequireReviewApproval {
 		if len(reviews) == 0 {
 			return Output{Success: false}, fmt.Errorf("PR awaiting review")

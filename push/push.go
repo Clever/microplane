@@ -57,6 +57,8 @@ func (o Output) String() string {
 		s += "❌"
 	case "pending":
 		s += "🕐"
+	case "awaiting-review":
+		s += "👀"
 	case "success":
 		s += "✅"
 	default:
