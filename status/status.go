@@ -61,7 +61,7 @@ func pushStatusString(status string) string {
 		s += "  rejected by reviewer"
 	case pushStatusBuildPending:
 		s += "🕑"
-		s += "  CI status pending"
+		s += "  waiting for CI"
 	case pushStatusAwaitingReview:
 		s += "👀"
 		s += "  awaiting review"
