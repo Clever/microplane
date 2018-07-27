@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/status"
 	"github.com/spf13/cobra"
 )
 
@@ -19,42 +20,17 @@ var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Status shows a workflow's progress",
 	Run: func(cmd *cobra.Command, args []string) {
-		// find files and folders to explain the status of each repo
-		initPath := outputPath("", "init")
-
-		if _, err := os.Stat(initPath); os.IsNotExist(err) {
-			log.Fatalf("must run init first: %s\n", err.Error())
+		repos, err := whichRepos(cmd)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		var initOutput initialize.Output
-		if err := loadJSON(initPath, &initOutput); err != nil {
-			log.Fatalf("error loading init.json: %s\n", err.Error())
+		err = parallelize(repos, statusOneRepo)
+		if err != nil {
+			// TODO: dig into errors and display them with more detail
+			log.Fatal(err)
 		}
 
-		singleRepo, err := cmd.Flags().GetString("repo")
-		if err == nil && singleRepo != "" {
-			valid := false
-			validRepoNames := []string{}
-			for _, r := range initOutput.Repos {
-				if r.Name == singleRepo {
-					valid = true
-					break
-				}
-				validRepoNames = append(validRepoNames, r.Name)
-			}
-			if !valid {
-				log.Fatalf("%s not a targeted repo name (valid target repos are: %s)", singleRepo, strings.Join(validRepoNames, ", "))
-			}
-			isSingleRepo = true
-		}
-
-		repos := []string{}
-		for _, r := range initOutput.Repos {
-			if singleRepo != "" && r.Name != singleRepo {
-				continue
-			}
-			repos = append(repos, r.Name)
-		}
 		printStatus(repos)
 	},
 }
@@ -74,19 +50,31 @@ func joinWithTab(s ...string) string {
 	return strings.Join(s, "\t")
 }
 
-func printStatus(repos []string) {
+func printStatus(repos []initialize.Repo) {
 	out := tabWriterWithDefaults()
 	fmt.Fprintln(out, joinWithTab("REPO", "STATUS", "DETAILS"))
 	for _, r := range repos {
-		status, details := getRepoStatus(r)
+		status, details := readRepoStatus(r.Name)
 		d2 := strings.TrimSpace(details)
 		d3 := strings.Join(strings.Split(d2, "\n"), " ")
 		if len(d3) > 150 {
 			d3 = d3[:150] + "..."
 		}
-		fmt.Fprintln(out, joinWithTab(r, status, d3))
+		fmt.Fprintln(out, joinWithTab(r.Name, status, d3))
 	}
 	out.Flush()
+}
+
+func readRepoStatus(repo string) (currentStep, details string) {
+	var statusOutput struct {
+		status.Output
+		Error string
+	}
+	if loadJSON(outputPath(repo, "status"), &statusOutput) == nil && statusOutput.Success {
+		currentStep = statusOutput.CurrentStep
+		details = statusOutput.Details
+	}
+	return
 }
 
 func statusOneRepo(r initialize.Repo, ctx context.Context) error {
@@ -101,9 +89,11 @@ func statusOneRepo(r initialize.Repo, ctx context.Context) error {
 
 	// Execute
 	input := status.Input{
-		Org:  r.Owner,
-		Repo: r.Name,
+		Org:     r.Owner,
+		Repo:    r.Name,
+		Workdir: workDir,
 	}
+
 	output, err := status.Status(ctx, input, githubLimiter)
 	if err != nil {
 		log.Printf("%s/%s - status error: %s", r.Owner, r.Name, err.Error())

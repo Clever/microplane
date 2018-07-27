@@ -22,6 +22,12 @@ var mergeFlagIgnoreReviewApproval bool
 // rate limits the # of PR merges. used to prevent load on CI system
 var mergeThrottle *time.Ticker
 
+// TODO: Write status output to file
+// Include a timestamp
+// Ideally, only refresh if hasn't been refreshed in past n seconds
+// Make a best effort to refresh older ones, but only do a few updates-- try to keep whole command execution < 2seconds
+// Also allow a --refresh=false flag to disable polling Github (not sure which is better default behavior - refresh or no)
+
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
 	Short: "Merge pushed changes",

@@ -27,12 +27,16 @@ const pushStatusAwaitingReview = "awaiting-review"
 const pushStatusReadyToMerge = "ready-to-merge"
 const pushStatusAlreadyMerged = "already-merged"
 
+var workDir string
+
 // Input to Status
 type Input struct {
 	// Org on Github, e.g. "Clever"
 	Org string
 	// Repo is the name of the repo on Github, e.g. "microplane"
 	Repo string
+	// Workdir is the working dictory
+	Workdir string
 }
 
 // Output from Status()
@@ -46,23 +50,18 @@ type Output struct {
 	Timestamp time.Time
 }
 
-// TODO: Write status output to file
-// Include a timestamp
-// Ideally, only refresh if hasn't been refreshed in past n seconds
-// Make a best effort to refresh older ones, but only do a few updates-- try to keep whole command execution < 2seconds
-// Also allow a --refresh=false flag to disable polling Github (not sure which is better default behavior - refresh or no)
 func pushStatusString(status string) string {
 	s := ""
 	switch status {
 	case pushStatusFailedBuild:
 		s += "💔"
-		s += "  build failed"
+		s += "  CI failed"
 	case pushStatusRejectedReview:
 		s += "🙅"
 		s += "  rejected by reviewer"
 	case pushStatusBuildPending:
 		s += "🕑"
-		s += "  build in progress"
+		s += "  CI status pending"
 	case pushStatusAwaitingReview:
 		s += "👀"
 		s += "  awaiting review"
@@ -71,7 +70,8 @@ func pushStatusString(status string) string {
 		s += "  ready to merge"
 	default:
 		s += "❓"
-		s += "  PR status unknown"
+		s += "  unknown status: "
+		s += status
 	}
 
 	return s
@@ -138,35 +138,50 @@ func getPushStatus(ctx context.Context, input merge.Input, githubLimiter *time.T
 	return pushStatusReadyToMerge, nil
 }
 
-func Status(input Input) (status, details string) {
-	status = "initialized"
-	details = ""
+func Status(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output, error) {
+	// set global, used in helper methods
+	// TODO: pass more explicitly
+	workDir = input.Workdir
+
+	out := Output{
+		Success:     true,
+		CurrentStep: "initialized",
+		Details:     "",
+	}
+
+	// has clone been run?
 	var cloneOutput struct {
 		clone.Output
 		Error string
 	}
 	if !(loadJSON(outputPath(input.Repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
 		if cloneOutput.Error != "" {
-			details = color.RedString("(clone error) ") + cloneOutput.Error
+			out.Details = color.RedString("(clone error) ") + cloneOutput.Error
 		}
-		return
+		return out, nil
 	}
-	status = "cloned"
+	out.CurrentStep = "cloned"
 
+	// has plan been run?
 	var planOutput struct {
 		plan.Output
 		Error string
 	}
 	if !(loadJSON(outputPath(input.Repo, "plan"), &planOutput) == nil && planOutput.Success) {
 		if planOutput.Error != "" {
-			details = color.RedString("(plan error) ") + planOutput.Error
+			out.Details = color.RedString("(plan error) ") + planOutput.Error
 		}
-		return
+		return out, nil
 	}
-	status = "planned"
+
+	out.CurrentStep = "planned"
 	diff, err := diffparser.Parse(planOutput.GitDiff)
 	if err == nil {
-		details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
+		out.Details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
+		out.GitDiff = planOutput.GitDiff
+	} else {
+		out.Details = fmt.Sprintf("? file(s) modified", len(diff.Files))
+		out.GitDiff = "error determining git diff"
 	}
 
 	var pushOutput struct {
@@ -175,7 +190,7 @@ func Status(input Input) (status, details string) {
 	}
 	if !(loadJSON(outputPath(input.Repo, "push"), &pushOutput) == nil && pushOutput.Success) {
 		if pushOutput.Error != "" {
-			details = color.RedString("(push error) ") + pushOutput.Error
+			out.Details = color.RedString("(push error) ") + pushOutput.Error
 		}
 
 		// TODO: move this up into the cmd
@@ -185,11 +200,10 @@ func Status(input Input) (status, details string) {
 		//fmt.Println(planOutput.GitDiff)
 		//fmt.Println("")
 		//}
-
-		return
+		return out, nil
 	}
-	status = "pushed"
-	details = pushOutput.String()
+	out.CurrentStep = "pushed"
+	out.Details = pushOutput.String()
 
 	var mergeOutput struct {
 		merge.Output
@@ -197,7 +211,7 @@ func Status(input Input) (status, details string) {
 	}
 	if !(loadJSON(outputPath(input.Repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
 		if mergeOutput.Error != "" {
-			details = color.RedString("(merge error) ") + mergeOutput.Error
+			out.Details = color.RedString("(merge error) ") + mergeOutput.Error
 		} else {
 			// Lookup latest push status
 			text, err := getPushStatus(context.Background(), merge.Input{
@@ -209,17 +223,16 @@ func Status(input Input) (status, details string) {
 			}, githubLimiter)
 
 			if err != nil {
-				fmt.Println("Error", err.Error())
+				out.Details = fmt.Sprintf("error determining push status: %s", err)
 			} else {
-				details = merge.PushStatusString(text)
+				out.Details = pushStatusString(text)
 			}
 		}
-		return
+		return out, nil
 	}
-	status = "merged"
-	details = ""
+	out.CurrentStep = "merged"
 
-	return
+	return out, nil
 }
 
 // TODO

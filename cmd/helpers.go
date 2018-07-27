@@ -30,7 +30,7 @@ func writeJSON(obj interface{}, path string) error {
 }
 
 // TODO: Make parallelism configurable?
-var parallelism = 10
+var parallelism = int64(10)
 
 // parallelize take a list of repos and applies a function (clone, plan, ...) to them
 func parallelize(repos []initialize.Repo, f func(initialize.Repo, context.Context) error) error {
