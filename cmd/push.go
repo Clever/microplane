@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/merge"
@@ -13,7 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// CLI flags
 var pushFlagAssignee string
+var pushFlagThrottle string
+
+// rate limits the # of git pushes. used to prevent load on CI system
+var pushThrottle *time.Ticker
 
 var prAssignee string
 
@@ -29,6 +35,19 @@ var pushCmd = &cobra.Command{
 		}
 		if prAssignee == "" {
 			log.Fatal("--assignee is required")
+		}
+
+		throttle, err := cmd.Flags().GetString("throttle")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if throttle != "" {
+			// Try parsing it and updating the limiter
+			dur, err := time.ParseDuration(throttle)
+			if err != nil {
+				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
+			}
+			pushThrottle = time.NewTicker(dur)
 		}
 
 		repos, err := whichRepos(cmd)
@@ -86,7 +105,7 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		BranchName: planOutput.BranchName,
 		RepoOwner:  r.Owner,
 	}
-	output, err := push.Push(ctx, input, githubLimiter)
+	output, err := push.Push(ctx, input, githubLimiter, pushThrottle)
 	if err != nil {
 		o := struct {
 			push.Output
