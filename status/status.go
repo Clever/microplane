@@ -138,6 +138,7 @@ func getPushStatus(ctx context.Context, input merge.Input, githubLimiter *time.T
 	return pushStatusReadyToMerge, nil
 }
 
+// Status TODO
 func Status(ctx context.Context, input Input, githubLimiter *time.Ticker) (Output, error) {
 	// set global, used in helper methods
 	// TODO: pass more explicitly
@@ -147,6 +148,7 @@ func Status(ctx context.Context, input Input, githubLimiter *time.Ticker) (Outpu
 		Success:     true,
 		CurrentStep: "initialized",
 		Details:     "",
+		Timestamp:   time.Now(),
 	}
 
 	// has clone been run?
@@ -180,7 +182,7 @@ func Status(ctx context.Context, input Input, githubLimiter *time.Ticker) (Outpu
 		out.Details = fmt.Sprintf("%d file(s) modified", len(diff.Files))
 		out.GitDiff = planOutput.GitDiff
 	} else {
-		out.Details = fmt.Sprintf("? file(s) modified", len(diff.Files))
+		out.Details = fmt.Sprintf("? file(s) modified")
 		out.GitDiff = "error determining git diff"
 	}
 
@@ -213,6 +215,15 @@ func Status(ctx context.Context, input Input, githubLimiter *time.Ticker) (Outpu
 		if mergeOutput.Error != "" {
 			out.Details = color.RedString("(merge error) ") + mergeOutput.Error
 		} else {
+			// check if most recent status is pretty recent, if so don't refresh
+			var statusOutput struct {
+				Output
+				Error string
+			}
+			if loadJSON(outputPath(input.Repo, "status"), &statusOutput) == nil && statusOutput.Success && statusOutput.Timestamp.After(time.Now().Add(-1*time.Minute)) {
+				return statusOutput.Output, nil
+			}
+
 			// Lookup latest push status
 			text, err := getPushStatus(context.Background(), merge.Input{
 				Org:                   input.Org,
