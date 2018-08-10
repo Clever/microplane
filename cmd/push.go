@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,11 +18,13 @@ import (
 // CLI flags
 var pushFlagAssignee string
 var pushFlagThrottle string
+var pushFlagBodyFile string
 
 // rate limits the # of git pushes. used to prevent load on CI system
 var pushThrottle *time.Ticker
 
 var prAssignee string
+var prBody string
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
@@ -35,6 +38,18 @@ var pushCmd = &cobra.Command{
 		}
 		if prAssignee == "" {
 			log.Fatal("--assignee is required")
+		}
+
+		prBodyFile, err := cmd.Flags().GetString("body-file")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if prBodyFile != "" {
+			prBodyBytes, err := ioutil.ReadFile(prBodyFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			prBody = string(prBodyBytes)
 		}
 
 		throttle, err := cmd.Flags().GetString("throttle")
@@ -100,7 +115,8 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		RepoName:   r.Name,
 		PlanDir:    planOutput.PlanDir,
 		WorkDir:    pushWorkDir,
-		PRMessage:  planOutput.CommitMessage,
+		PRTitle:    planOutput.CommitMessage,
+		PRBody:     prBody,
 		PRAssignee: prAssignee,
 		BranchName: planOutput.BranchName,
 		RepoOwner:  r.Owner,

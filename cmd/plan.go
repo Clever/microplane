@@ -66,6 +66,7 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 
 		err = parallelize(repos, planOneRepo)
 		if err != nil {
+			log.Fatal("errors, %+v\n", err)
 			log.Fatal("# errors = ", strings.Count(err.Error(), " | ")+1)
 		}
 	},
