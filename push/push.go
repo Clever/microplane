@@ -29,8 +29,12 @@ type Input struct {
 	PlanDir string
 	// WorkDir is where the work associated with the Push operation happens
 	WorkDir string
-	// PRMessage is the text of the PR submitted to Github
-	PRMessage string
+	// CommitMessage is the commit message for the PR
+	// Its first line is used as the PR title.
+	// Subsequent lines are used as the PR body if there is no body file.
+	CommitMessage string
+	// PRBody is the body of the PR submitted to Github
+	PRBody string
 	// PRAssignee is the user who will be assigned the PR
 	PRAssignee string
 	// RepoOwner is the name of the user who owns the Github repo
@@ -101,11 +105,17 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimi
 	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
 	base := "master"
 
-	splitMsg := strings.SplitN(input.PRMessage, "\n", 2)
-	title := splitMsg[0]
+	// Determine PR title and body
+	// Title is first line of commit message.
+	// Body is given by body-file if it exists or is the remainder of the commit message after title.
+	title := input.CommitMessage
 	body := ""
+	splitMsg := strings.SplitN(input.CommitMessage, "\n", 2)
 	if len(splitMsg) == 2 {
-		body = splitMsg[1]
+		title = splitMsg[0]
+		if input.PRBody == "" {
+			body = splitMsg[1]
+		}
 	}
 	pr, err := findOrCreatePR(ctx, client, input.RepoOwner, input.RepoName, &github.NewPullRequest{
 		Title: &title,
