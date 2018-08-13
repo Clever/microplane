@@ -1,8 +1,6 @@
-autotranslate CircleCI 1.0 -> 2.0
-
 ### Jira
 
-[INFRA-3160](https://clever.atlassian.net/browse/INFRA-3160)
+[INFRA-3174](https://clever.atlassian.net/browse/INFRA-3174): migrate initial repos to CircleCI 2.0
 
 ### Overview
 
@@ -12,23 +10,23 @@ If you have any questions, please ask in #circleci-1-sunset in slack.
 
 CircleCI 1.0 is sunsetting August 31st, meaning CircleCI 1.0 builds will no longer work on September 1st.
 
-This PR uses the output of the `circle-v2-migrate` automigration script, with `microplane`, to translate the build config to CircleCI 2.0.
+This PR uses the output of the `circle-v2-migrate` automigration script, with `microplane`, to translate the build config from circle.yml to CircleCI 2.0's format and file location.
 
 This PR should not make any changes to application code.
 
 ### Reviewing
 
-Please check the following:
+**Please check the following:**
 
 - [ ] build works
-- [ ] build process includes all steps from the CircleCI 1.0 config
-
 
 If the build has failed, please link to the failing build in this repo's row in the [CircleCI 1.0 -> 2.0 migration tracking spreadsheet](https://docs.google.com/spreadsheets/d/1Uv6i2TXxZGBUCdjidp2xbqn3gMrgnikJnLgZBXicDBQ/edit?usp=sharing).
 
-If the build is missing steps, please leave a note in this repo's row in the [CircleCI 1.0 -> 2.0 migration tracking spreadsheet](https://docs.google.com/spreadsheets/d/1Uv6i2TXxZGBUCdjidp2xbqn3gMrgnikJnLgZBXicDBQ/edit?usp=sharing).
+If this repo does not need to be migrated, or if you have any other concerns, please post in #circleci-1-sunset and add a brief note in the migration tracking spreadsheet.
 
 ### Roll Out
+
+**Please merge this pull request when you are ready.**
 
 All test, build, publish, and deploy steps should have been preserved in the translation.
 

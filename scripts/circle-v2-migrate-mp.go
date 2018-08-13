@@ -40,4 +40,8 @@ func main() {
 	finalRmScriptCmd := exec.Command("rm", "./circle-v2-migrate")
 	finalRmScriptCmd.Run()
 
+	// remove circle.yml.bak from repo
+	rmBackupCmd := exec.Command("rm", "./circle.yml.bak")
+	rmBackupCmd.Run()
+
 }
