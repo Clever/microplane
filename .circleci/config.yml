@@ -1,0 +1,30 @@
+version: 2
+jobs:
+  build:
+    working_directory: /go/src/github.com/Clever/microplane
+    docker:
+    - image: circleci/golang:1.10.3-stretch
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+    steps:
+    - run:
+        command: cd $HOME && git clone --depth 1 -v https://github.com/Clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
+        name: Clone ci-scripts
+    - checkout
+    - run:
+        command: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+        name: Set up CircleCI artifacts directories
+    - run: make install_deps
+    - run: make build
+    - run:
+        command: make test
+        environment:
+          GITHUB_API_TOKEN: x
+    - run:
+        command: |-
+          cd /tmp/ && wget https://bootstrap.pypa.io/get-pip.py && sudo python get-pip.py
+          sudo apt-get install python-dev
+          sudo pip install --upgrade awscli && aws --version
+          pip install --upgrade --user awscli
+        name: Install awscli for ECR publish
