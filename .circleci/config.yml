@@ -17,7 +17,10 @@ jobs:
         name: Set up CircleCI artifacts directories
     - run: make install_deps
     - run: make build
-    - run: make test
+    - run:
+        command: make test
+        environment:
+          GITHUB_API_TOKEN: x
     - run:
         command: |-
           cd /tmp/ && wget https://bootstrap.pypa.io/get-pip.py && sudo python get-pip.py
