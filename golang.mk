@@ -1,11 +1,14 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 0.3.2
+GOLANG_MK_VERSION := 0.4.0
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
 .PHONY: golang-test-deps bin/dep golang-ensure-curl-installed
+
+# set timezone to UTC for golang to match circle and deploys
+export TZ=UTC
 
 # if the gopath includes several directories, use only the first
 GOPATH=$(shell echo $$GOPATH | cut -d: -f1)
@@ -36,18 +39,31 @@ $(FGT):
 golang-ensure-curl-installed:
 	@command -v curl >/dev/null 2>&1 || { echo >&2 "curl not installed. Please install curl."; exit 1; }
 
-DEP_VERSION = v0.3.2
+DEP_VERSION = v0.4.1
 DEP_INSTALLED := $(shell [[ -e "bin/dep" ]] && bin/dep version | grep version | grep -v go | cut -d: -f2 | tr -d '[:space:]')
 # Dep is a tool used to manage Golang dependencies. It is the offical vendoring experiment, but
 # not yet the official tool for Golang.
+ifeq ($(DEP_VERSION),$(DEP_INSTALLED))
+bin/dep: # nothing to do, dep is already up-to-date
+else
+CACHED_DEP = /tmp/dep-$(DEP_VERSION)
 bin/dep: golang-ensure-curl-installed
+	@echo "Updating dep..."
 	@mkdir -p bin
-	@[[ "$(DEP_VERSION)" != "$(DEP_INSTALLED)" ]] && \
-		echo "Updating dep..." && \
-		curl -o bin/dep -sL https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-$(SYSTEM)-amd64 && \
-		chmod +x bin/dep || true
+	@if [ ! -f $(CACHED_DEP) ]; then curl -o $(CACHED_DEP) -sL https://github.com/golang/dep/releases/download/$(DEP_VERSION)/dep-$(SYSTEM)-amd64; fi;
+	@cp $(CACHED_DEP) bin/dep
+	@chmod +x bin/dep || true
+endif
 
-golang-dep-vendor-deps: bin/dep
+# figure out "github.com/<org>/<repo>"
+# `go list` will fail if there are no .go files in the directory
+# if this is the case, fall back to assuming github.com/Clever
+REF = $(shell go list || echo github.com/Clever/$(notdir $(shell pwd)))
+golang-verify-no-self-references:
+	@if grep -q -i "$(REF)" Gopkg.lock; then echo "Error: Gopkg.lock includes a self-reference ($(REF)), which is not allowed. See: https://github.com/golang/dep/issues/1690" && exit 1; fi;
+	@if grep -q -i "$(REF)" Gopkg.toml; then echo "Error: Gopkg.toml includes a self-reference ($(REF)), which is not allowed. See: https://github.com/golang/dep/issues/1690" && exit 1; fi;
+
+golang-dep-vendor-deps: bin/dep golang-verify-no-self-references
 
 # golang-godep-vendor is a target for saving dependencies with the dep tool
 # to the vendor/ directory. All nested vendor/ directories are deleted via
@@ -66,7 +82,7 @@ endif
 # Golint is a tool for linting Golang code for common errors.
 GOLINT := $(GOPATH)/bin/golint
 $(GOLINT):
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint
 
 # golang-fmt-deps requires the FGT tool for checking output
 golang-fmt-deps: $(FGT)
