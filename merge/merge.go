@@ -24,6 +24,8 @@ type Input struct {
 	// - must have at least 1 reviewer
 	// - all reviewers must have explicitly approved
 	RequireReviewApproval bool
+	// RequireBuildSuccess specifies if the PR must have a successful build before merging
+	RequireBuildSuccess bool
 }
 
 // Output from Push()
@@ -74,9 +76,11 @@ func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLi
 		return Output{Success: false}, err
 	}
 
-	state := status.GetState()
-	if state != "success" {
-		return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", state)
+	if input.RequireBuildSuccess {
+		state := status.GetState()
+		if state != "success" {
+			return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", state)
+		}
 	}
 
 	// (3) check if PR has been approved by a reviewer
