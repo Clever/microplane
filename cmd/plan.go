@@ -66,7 +66,7 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 
 		err = parallelize(repos, planOneRepo)
 		if err != nil {
-			log.Fatal("# errors = ", strings.Count(err.Error(), " | ")+1)
+			log.Fatalf("%d errors:\n %+v\n", strings.Count(err.Error(), " | ")+1, err)
 		}
 	},
 }
@@ -114,7 +114,7 @@ func planOneRepo(r initialize.Repo, ctx context.Context) error {
 			Error string
 		}{output, err.Error()}
 		writeJSON(o, planOutputPath)
-		return err
+		return fmt.Errorf("%s/%s error: %+v", r.Owner, r.Name, err)
 	}
 	writeJSON(output, planOutputPath)
 	if isSingleRepo {
