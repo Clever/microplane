@@ -19,6 +19,7 @@ import (
 var mergeFlagThrottle string
 var mergeFlagIgnoreReviewApproval bool
 var mergeFlagIgnoreBuildStatus bool
+var mergeFlagAllowMultiMerge bool
 
 // rate limits the # of PR merges. used to prevent load on CI system
 var mergeThrottle *time.Ticker
@@ -33,17 +34,27 @@ var mergeCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
+		// Try parsing throttle and updating the limiter
 		throttle, err := cmd.Flags().GetString("throttle")
 		if err != nil {
 			log.Fatal(err)
 		}
+		var dur time.Duration
 		if throttle != "" {
-			// Try parsing it and updating the limiter
-			dur, err := time.ParseDuration(throttle)
+			dur, err = time.ParseDuration(throttle)
 			if err != nil {
 				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
 			}
 			mergeThrottle = time.NewTicker(dur)
+		}
+
+		// If attempting to merge many repos, stop unless allow-multi-merge flag or a throttle is present.
+		allowMultiMerge, err := cmd.Flags().GetBool("allow-multi-merge")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(repos) > 8 && dur < 2*time.Minute && !allowMultiMerge {
+			log.Fatal("ERROR: merging many repos at once causes CI delays.\nRerun with --allow-multi-merge or add a --throttle of at least 2 minutes (--throttle=2m).")
 		}
 
 		err = parallelize(repos, mergeOneRepo)
