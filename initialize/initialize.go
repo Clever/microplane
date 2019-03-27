@@ -66,19 +66,25 @@ func githubSearch(query string) ([]Repo, error) {
 
 	opts := &github.SearchOptions{}
 	allRepos := map[string]*github.Repository{}
+	numProcessedResults := 0
 	for {
 		result, resp, err := client.Search.Code(context.Background(), query, opts)
 		if err != nil {
-			log.Fatalf("Search.Code returned error: %v", err)
-		}
-		if result.GetIncompleteResults() {
-			log.Fatalf("Github API timed out before completing query")
+			log.Printf("Search.Code returned error: %v", err)
 		}
 
 		for _, codeResult := range result.CodeResults {
+			numProcessedResults = numProcessedResults + 1
 			repoCopy := *codeResult.Repository
 			allRepos[*codeResult.Repository.Name] = &repoCopy
 		}
+
+		incompleteResults := result.GetIncompleteResults()
+		if incompleteResults {
+			log.Println("WARNING: Github API timed out before completing query")
+			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *result.Total, resp.NextPage)
+		}
+
 		if resp.NextPage == 0 {
 			break
 		}
