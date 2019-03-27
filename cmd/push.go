@@ -17,6 +17,7 @@ import (
 // CLI flags
 var pushFlagAssignee string
 var pushFlagThrottle string
+var pushFlagAllowMultiPush bool
 
 // rate limits the # of git pushes. used to prevent load on CI system
 var pushThrottle *time.Ticker
@@ -37,13 +38,14 @@ var pushCmd = &cobra.Command{
 			log.Fatal("--assignee is required")
 		}
 
+		// Try parsing throttle and updating the limiter
 		throttle, err := cmd.Flags().GetString("throttle")
 		if err != nil {
 			log.Fatal(err)
 		}
+		var dur time.Duration
 		if throttle != "" {
-			// Try parsing it and updating the limiter
-			dur, err := time.ParseDuration(throttle)
+			dur, err = time.ParseDuration(throttle)
 			if err != nil {
 				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
 			}
@@ -53,6 +55,15 @@ var pushCmd = &cobra.Command{
 		repos, err := whichRepos(cmd)
 		if err != nil {
 			log.Fatal(err)
+		}
+
+		// If attempting to push many repos, stop unless allow-multi-push flag or a throttle is present.
+		allowMultiPush, err := cmd.Flags().GetBool("allow-multi-push")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(repos) > 8 && dur < 2*time.Minute && !allowMultiPush {
+			log.Fatal("ERROR: pushing many repos at once causes CI delays.\nRerun with --allow-multi-push or add a --throttle of at least 2 minutes (--throttle=2m).")
 		}
 
 		err = parallelize(repos, pushOneRepo)
