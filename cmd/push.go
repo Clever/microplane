@@ -121,7 +121,13 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		BranchName:    planOutput.BranchName,
 		RepoOwner:     r.Owner,
 	}
-	output, err := push.Push(ctx, input, githubLimiter, pushThrottle)
+	var output push.Output
+	var err error
+	if r.Provider == "gitlab" {
+		output, err = push.GitlabPush(ctx, input, githubLimiter, pushThrottle)
+	} else if r.Provider == "github" {
+		output, err = push.GithubPush(ctx, input, githubLimiter, pushThrottle)
+	}
 	if err != nil {
 		o := struct {
 			push.Output

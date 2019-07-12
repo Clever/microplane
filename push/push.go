@@ -75,7 +75,7 @@ func (o Output) String() string {
 }
 
 // Push pushes the commit to Github and opens a pull request
-func Push(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
+func GithubPush(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
 	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)

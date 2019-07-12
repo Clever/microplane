@@ -25,8 +25,8 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	if os.Getenv("GITHUB_API_TOKEN") == "" {
-		log.Fatalf("GITHUB_API_TOKEN env var is not set. In order to use microplane, create a token (https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) then set the env var.")
+	if os.Getenv("GITHUB_API_TOKEN") == "" && os.Getenv("GITLAB_API_TOKEN") == "" {
+		log.Fatalf("GITHUB_API_TOKEN or GITLAB_API_TOKEN env var is not set. In order to use microplane, create a token (https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) then set the env var.")
 	}
 
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
@@ -34,6 +34,7 @@ func init() {
 	rootCmd.AddCommand(docsCmd)
 	rootCmd.AddCommand(initCmd)
 
+	initCmd.Flags().StringVarP(&repoProviderFlag, "provider", "p", "", "Git Repository Provider: github or gitlab")
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "1ms", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
 	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreReviewApproval, "ignore-review-approval", false, "Ignore whether or not the review has been approved")

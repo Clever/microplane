@@ -43,7 +43,7 @@ type Error struct {
 // Merge an open PR in Github
 // - githubLimiter rate limits the # of calls to Github
 // - mergeLimiter rate limits # of merges, to prevent load when submitting builds to CI system
-func Merge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
+func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
 	// Create Github Client
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
