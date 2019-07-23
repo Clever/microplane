@@ -41,9 +41,9 @@ type Error struct {
 }
 
 // Merge an open PR in Github
-// - githubLimiter rate limits the # of calls to Github
+// - repoLimiter rate limits the # of calls to Github
 // - mergeLimiter rate limits # of merges, to prevent load when submitting builds to CI system
-func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
+func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
 	// Create Github Client
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
@@ -54,7 +54,7 @@ func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, m
 	// OK to merge?
 
 	// (1) Check if the PR is mergeable
-	<-githubLimiter.C
+	<-repoLimiter.C
 	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
 	if err != nil {
 		return Output{Success: false}, err
@@ -70,7 +70,7 @@ func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, m
 	}
 
 	// (2) Check commit status
-	<-githubLimiter.C
+	<-repoLimiter.C
 	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, &github.ListOptions{})
 	if err != nil {
 		return Output{Success: false}, err
@@ -84,7 +84,7 @@ func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, m
 	}
 
 	// (3) check if PR has been approved by a reviewer
-	<-githubLimiter.C
+	<-repoLimiter.C
 	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Org, input.Repo, input.PRNumber, &github.ListOptions{})
 	if input.RequireReviewApproval {
 		if len(reviews) == 0 {
@@ -101,7 +101,7 @@ func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, m
 	options := &github.PullRequestOptions{}
 	commitMsg := ""
 	<-mergeLimiter.C
-	<-githubLimiter.C
+	<-repoLimiter.C
 	result, _, err := client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
 	if err != nil {
 		return Output{Success: false}, err
@@ -112,7 +112,7 @@ func GitHubMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, m
 	}
 
 	// Delete the branch
-	<-githubLimiter.C
+	<-repoLimiter.C
 	_, err = client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
 	if err != nil {
 		return Output{Success: false}, err

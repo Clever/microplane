@@ -20,23 +20,16 @@ $ mp init "org:Clever filename:circle.yml"
 
 would target all Clever repos with a circle.yml file.
 
-See https://help.github.com/articles/searching-code/ for more details about the syntax.`,
+See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
+See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more details about the search syntax on Gitlab`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
-		provider, err := cmd.Flags().GetString("provider")
-		if err != nil {
-			log.Fatal(err)
-		}
-		if provider != "github" && provider != "gitlab" {
-			log.Fatal("--provider must be github or gitlab")
-		}
 		query := args[0]
 		output, err := initialize.Initialize(initialize.Input{
 			Query:        query,
 			WorkDir:      workDir,
 			Version:      cliVersion,
-			RepoProvider: provider,
+			RepoProvider: repoProviderFlag,
 		})
 		if err != nil {
 			log.Fatal(err)

@@ -21,7 +21,10 @@ First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this ca
 
 ## Usage
 
-_Note_: The `GITHUB_API_TOKEN` environment variable must be set.
+_Note_: The `GITHUB_API_TOKEN` environment variable must be set for Github.
+        The `GITLAB_API_TOKEN` environment variable must be set for Gitlab.
+        The `GITLAB_URL` environment variable must be set for Gitlab on premise setup, otherwise it will use https://gitlab.com.
+
 This should be a [Github Token](https://github.com/settings/tokens) with `repo` scope.
 
 Microplane has an opinionated workflow for how you should manage git changes across many repos.

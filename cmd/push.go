@@ -124,9 +124,9 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 	var output push.Output
 	var err error
 	if r.Provider == "gitlab" {
-		output, err = push.GitlabPush(ctx, input, githubLimiter, pushThrottle)
+		output, err = push.GitlabPush(ctx, input, repoLimiter, pushThrottle)
 	} else if r.Provider == "github" {
-		output, err = push.GithubPush(ctx, input, githubLimiter, pushThrottle)
+		output, err = push.GithubPush(ctx, input, repoLimiter, pushThrottle)
 	}
 	if err != nil {
 		o := struct {

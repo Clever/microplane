@@ -12,8 +12,8 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-// Push pushes the commit to Github and opens a pull request
-func GitlabPush(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
+// GitlabPush pushes the commit to Gitlab and opens a pull request
+func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
 	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
@@ -34,13 +34,15 @@ func GitlabPush(ctx context.Context, input Input, githubLimiter *time.Ticker, pu
 
 	// Create Gitlab Client
 	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
-	client.SetBaseURL(os.Getenv("GITLAB_URL"))
+	if os.Getenv("GITLAB_URL") != "" {
+		client.SetBaseURL(os.Getenv("GITLAB_URL"))
+	}
 
 	// Open a pull request, if one doesn't exist already
 	head := input.BranchName
 	base := "master"
 
-	// Determine PR title and body
+	// Determine MR title and body
 	// Title is first line of commit message.
 	// Body is given by body-file if it exists or is the remainder of the commit message after title.
 	title := input.CommitMessage
@@ -58,7 +60,7 @@ func GitlabPush(ctx context.Context, input Input, githubLimiter *time.Ticker, pu
 		Description:  &body,
 		SourceBranch: &head,
 		TargetBranch: &base,
-	}, githubLimiter, pushLimiter)
+	}, repoLimiter, pushLimiter)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -77,15 +79,15 @@ func GitlabPush(ctx context.Context, input Input, githubLimiter *time.Ticker, pu
 	}, nil
 }
 
-func findOrCreateGitlabMR(ctx context.Context, client *gitlab.Client, owner string, name string, pull *gitlab.CreateMergeRequestOptions, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (*gitlab.MergeRequest, error) {
+func findOrCreateGitlabMR(ctx context.Context, client *gitlab.Client, owner string, name string, pull *gitlab.CreateMergeRequestOptions, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (*gitlab.MergeRequest, error) {
 	var pr *gitlab.MergeRequest
 	prStatus := "opened"
 	<-pushLimiter.C
-	<-githubLimiter.C
+	<-repoLimiter.C
 	pid := fmt.Sprintf("%s/%s", owner, name)
 	newMR, _, err := client.MergeRequests.CreateMergeRequest(pid, pull)
 	if err != nil && strings.Contains(err.Error(), "merge request already exists") {
-		<-githubLimiter.C
+		<-repoLimiter.C
 		existingMRs, _, err := client.MergeRequests.ListMergeRequests(&gitlab.ListMergeRequestsOptions{
 			SourceBranch: pull.SourceBranch,
 			TargetBranch: pull.TargetBranch,
@@ -97,11 +99,11 @@ func findOrCreateGitlabMR(ctx context.Context, client *gitlab.Client, owner stri
 			return nil, errors.New("unexpected: found more than 1 MR for branch")
 		}
 		pr = existingMRs[0]
-		//If needed, update PR title and body
+		//If needed, update MR title and body
 		if different(&pr.Title, pull.Title) || different(&pr.Description, pull.Description) {
 			pr.Title = *pull.Title
 			pr.Description = *pull.Description
-			<-githubLimiter.C
+			<-repoLimiter.C
 			pr, _, err = client.MergeRequests.UpdateMergeRequest(pid, existingMRs[0].ID, &gitlab.UpdateMergeRequestOptions{
 				TargetBranch: pull.TargetBranch,
 			})

@@ -121,7 +121,9 @@ func githubSearch(query string) ([]Repo, error) {
 func gitlabSearch(query string) ([]Repo, error) {
 	var blobsProjectIDs []int
 	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
-	client.SetBaseURL(os.Getenv("GITLAB_URL"))
+	if os.Getenv("GITLAB_URL") != "" {
+		client.SetBaseURL(os.Getenv("GITLAB_URL"))
+	}
 	opt := &gitlab.SearchOptions{
 		PerPage: 20,
 	}
