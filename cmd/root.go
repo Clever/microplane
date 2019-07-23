@@ -32,9 +32,7 @@ func init() {
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
 	rootCmd.AddCommand(docsCmd)
-	rootCmd.AddCommand(initCmd)
 
-	initCmd.Flags().StringVarP(&repoProviderFlag, "provider", "p", "", "Git Repository Provider: github or gitlab")
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "1ms", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
 	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreReviewApproval, "ignore-review-approval", false, "Ignore whether or not the review has been approved")
@@ -50,6 +48,9 @@ func init() {
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
 
 	rootCmd.AddCommand(statusCmd)
+
+	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().StringVarP(&repoProviderFlag, "provider", "p", "", "Git Repository Provider: github or gitlab")
 
 	workDir, _ = filepath.Abs("./mp")
 

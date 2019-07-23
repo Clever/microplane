@@ -1,6 +1,7 @@
 package merge
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -9,11 +10,13 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
-// Merge an open PR in Github
+// Merge an open MR in Gitlab
 // - githubLimiter rate limits the # of calls to Github
 // - mergeLimiter rate limits # of merges, to prevent load when submitting builds to CI system
-func GitlabMerge(input Input, githubLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
-	// Create Github Client
+func GitlabMerge(ctx context.Context, input Input, githubLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
+	// Create Gitlab Client
+	ctxFunc := gitlab.WithContext(ctx)
+
 	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
 	client.SetBaseURL(os.Getenv("GITLAB_URL"))
 
@@ -23,8 +26,7 @@ func GitlabMerge(input Input, githubLimiter *time.Ticker, mergeLimiter *time.Tic
 	<-githubLimiter.C
 	pid := fmt.Sprintf("%s/%s", input.Org, input.Repo)
 	truePointer := true
-	mr, _, err := client.MergeRequests.GetMergeRequest(pid, input.PRNumber, &gitlab.GetMergeRequestsOptions{IncludeDivergedCommitsCount: &truePointer})
-	//mr, _, err := client.MergeRequests.GetMergeRequest(pid, 492, nil)
+	mr, _, err := client.MergeRequests.GetMergeRequest(pid, input.PRNumber, &gitlab.GetMergeRequestsOptions{IncludeDivergedCommitsCount: &truePointer}, ctxFunc)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -41,12 +43,12 @@ func GitlabMerge(input Input, githubLimiter *time.Ticker, mergeLimiter *time.Tic
 	<-githubLimiter.C
 	pipelineStatus, err := push.GetPipelineStatus(client, input.Org, input.Repo, &gitlab.ListProjectPipelinesOptions{SHA: &input.CommitSHA})
 	if err != nil || pipelineStatus != "success" {
-		return Output{Success: false}, fmt.Errorf("Pipeline is in %s status", pipelineStatus)
+		return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", pipelineStatus)
 	}
 
 	// // (3) check if PR has been approved by a reviewer
 	<-githubLimiter.C
-	approvals, _, err := client.MergeRequests.GetMergeRequestApprovals(pid, input.PRNumber)
+	approvals, _, err := client.MergeRequests.GetMergeRequestApprovals(pid, input.PRNumber, ctxFunc)
 	if approvals.ApprovalsRequired == 1 {
 		if len(approvals.ApprovedBy) == 0 {
 			return Output{Success: false}, fmt.Errorf("PR is not approved. Review state is %s", mr.State)
@@ -54,7 +56,7 @@ func GitlabMerge(input Input, githubLimiter *time.Ticker, mergeLimiter *time.Tic
 	}
 	// Try to rebase master if Diverged Commits greates that zero
 	if mr.DivergedCommitsCount > 0 {
-		_, err := client.MergeRequests.RebaseMergeRequest(pid, input.PRNumber)
+		_, err := client.MergeRequests.RebaseMergeRequest(pid, input.PRNumber, ctxFunc)
 		if err != nil {
 			return Output{Success: false}, fmt.Errorf("Failed to rebase from master")
 		}
@@ -63,10 +65,9 @@ func GitlabMerge(input Input, githubLimiter *time.Ticker, mergeLimiter *time.Tic
 	// Merge the PR
 	<-mergeLimiter.C
 	<-githubLimiter.C
-	time.Sleep(20 * time.Second)
 	result, _, err := client.MergeRequests.AcceptMergeRequest(pid, input.PRNumber, &gitlab.AcceptMergeRequestOptions{
 		ShouldRemoveSourceBranch: &truePointer,
-	})
+	}, ctxFunc)
 	if err != nil {
 		return Output{Success: false}, err
 	}

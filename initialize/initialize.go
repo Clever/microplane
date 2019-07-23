@@ -8,7 +8,6 @@ import (
 	"sort"
 
 	"github.com/google/go-github/github"
-	funk "github.com/thoas/go-funk"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 )
@@ -114,6 +113,11 @@ func githubSearch(query string) ([]Repo, error) {
 	return repos, nil
 }
 
+// gitlabSearch queries gitlab and returns a list of matching repos
+//
+// Gitlab Code Search Syntax:
+// https://docs.gitlab.com/ee/user/search/advanced_global_search.html
+// https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html
 func gitlabSearch(query string) ([]Repo, error) {
 	var blobsProjectIDs []int
 	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
@@ -126,7 +130,7 @@ func gitlabSearch(query string) ([]Repo, error) {
 		fmt.Println(err)
 	}
 	for _, blob := range blobs {
-		if !funk.Contains(blobsProjectIDs, blob.ProjectID) {
+		if !contains(blobsProjectIDs, blob.ProjectID) {
 			blobsProjectIDs = append(blobsProjectIDs, blob.ProjectID)
 		}
 	}
@@ -144,4 +148,13 @@ func gitlabSearch(query string) ([]Repo, error) {
 		})
 	}
 	return repos, nil
+}
+
+func contains(values []int, target int) bool {
+	for _, val := range values {
+		if val == target {
+			return true
+		}
+	}
+	return false
 }

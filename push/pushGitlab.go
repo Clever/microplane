@@ -118,11 +118,14 @@ func findOrCreateGitlabMR(ctx context.Context, client *gitlab.Client, owner stri
 	return pr, nil
 }
 
+// GetPipelineStatus returns status of pipeline, if pipeline is absent, returns unknown string
 func GetPipelineStatus(client *gitlab.Client, owner string, name string, opts *gitlab.ListProjectPipelinesOptions) (string, error) {
 	pid := fmt.Sprintf("%s/%s", owner, name)
 	pipeline, _, err := client.Pipelines.ListProjectPipelines(pid, opts)
 	if err != nil {
 		return "", errors.New("unexpected: cannot get pipeline status")
+	} else if len(pipeline) == 0 {
+		return "No pipeline was found", nil
 	}
 	return pipeline[0].Status, nil
 }

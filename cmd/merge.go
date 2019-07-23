@@ -96,9 +96,11 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 	}
 	var output merge.Output
 	if r.Provider == "gitlab" {
-		output, err = merge.GitlabMerge(input, githubLimiter, mergeThrottle)
+		output, err = merge.GitlabMerge(ctx, input, githubLimiter, mergeThrottle)
 	} else if r.Provider == "github" {
 		output, err = merge.GitHubMerge(ctx, input, githubLimiter, mergeThrottle)
+	} else {
+		log.Fatal("Provider must be github or gitlab")
 	}
 	if err != nil {
 		log.Printf("%s/%s - merge error: %s", r.Owner, r.Name, err.Error())
