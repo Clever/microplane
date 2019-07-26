@@ -24,6 +24,8 @@ $ mp init "org:Clever filename:circle.yml"
 
 would target all Clever repos with a circle.yml file.
 
+See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
+
 ## GitLab
 
 If you are using the public version of GitLab, search is done via the Global "projects" scope.
@@ -34,8 +36,7 @@ $ mp init "mp-test-1"
 would target a specific repo called mp-test-1.
 
 If you are using an enterprise GitLab instance, we assume you have an ElasticSearch setup.
-See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
-See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more details about the search syntax on Gitlab`,
+See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more details about the search syntax on Gitlab.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
