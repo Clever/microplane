@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var repoProviderFlag string
+
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
 	Short: "Initialize a microplane workflow",
@@ -18,14 +20,16 @@ $ mp init "org:Clever filename:circle.yml"
 
 would target all Clever repos with a circle.yml file.
 
-See https://help.github.com/articles/searching-code/ for more details about the syntax.`,
-	Args: cobra.ExactArgs(1),
+See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
+See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more details about the search syntax on Gitlab`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := args[0]
 		output, err := initialize.Initialize(initialize.Input{
-			Query:   query,
-			WorkDir: workDir,
-			Version: cliVersion,
+			Query:        query,
+			WorkDir:      workDir,
+			Version:      cliVersion,
+			RepoProvider: repoProviderFlag,
 		})
 		if err != nil {
 			log.Fatal(err)

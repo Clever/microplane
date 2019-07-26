@@ -94,7 +94,14 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 		RequireReviewApproval: !mergeFlagIgnoreReviewApproval,
 		RequireBuildSuccess:   !mergeFlagIgnoreBuildStatus,
 	}
-	output, err := merge.Merge(ctx, input, githubLimiter, mergeThrottle)
+	var output merge.Output
+	if r.Provider == "gitlab" {
+		output, err = merge.GitlabMerge(ctx, input, repoLimiter, mergeThrottle)
+	} else if r.Provider == "github" {
+		output, err = merge.GitHubMerge(ctx, input, repoLimiter, mergeThrottle)
+	} else {
+		log.Fatal("Provider must be github or gitlab")
+	}
 	if err != nil {
 		log.Printf("%s/%s - merge error: %s", r.Owner, r.Name, err.Error())
 		o := struct {

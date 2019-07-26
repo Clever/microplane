@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"github.com/google/go-github/github"
+	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 )
 
@@ -16,13 +17,15 @@ type Repo struct {
 	Name     string
 	Owner    string
 	CloneURL string
+	Provider string
 }
 
 // Input for Initialize
 type Input struct {
-	WorkDir string
-	Query   string
-	Version string
+	WorkDir      string
+	Query        string
+	Version      string
+	RepoProvider string
 }
 
 // Output for Initialize
@@ -40,7 +43,13 @@ func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
 // Initialize searches Github for matching repos
 func Initialize(input Input) (Output, error) {
-	repos, err := githubSearch(input.Query)
+	var repos []Repo
+	var err error
+	if input.RepoProvider == "github" {
+		repos, err = githubSearch(input.Query)
+	} else if input.RepoProvider == "gitlab" {
+		repos, err = gitlabSearch(input.Query)
+	}
 	if err != nil {
 		return Output{}, err
 	}
@@ -97,8 +106,57 @@ func githubSearch(query string) ([]Repo, error) {
 			Name:     r.GetName(),
 			Owner:    r.Owner.GetLogin(),
 			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			Provider: "github",
 		})
 	}
 
 	return repos, nil
+}
+
+// gitlabSearch queries gitlab and returns a list of matching repos
+//
+// Gitlab Code Search Syntax:
+// https://docs.gitlab.com/ee/user/search/advanced_global_search.html
+// https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html
+func gitlabSearch(query string) ([]Repo, error) {
+	var blobsProjectIDs []int
+	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
+	if os.Getenv("GITLAB_URL") != "" {
+		client.SetBaseURL(os.Getenv("GITLAB_URL"))
+	}
+	opt := &gitlab.SearchOptions{
+		PerPage: 20,
+	}
+	blobs, _, err := client.Search.Blobs(query, opt)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, blob := range blobs {
+		if !contains(blobsProjectIDs, blob.ProjectID) {
+			blobsProjectIDs = append(blobsProjectIDs, blob.ProjectID)
+		}
+	}
+	repos := []Repo{}
+	for _, i := range blobsProjectIDs {
+		project, _, err := client.Projects.GetProject(i, nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+		repos = append(repos, Repo{
+			Name:     project.Name,
+			Owner:    project.Namespace.FullPath,
+			CloneURL: project.SSHURLToRepo,
+			Provider: "gitlab",
+		})
+	}
+	return repos, nil
+}
+
+func contains(values []int, target int) bool {
+	for _, val := range values {
+		if val == target {
+			return true
+		}
+	}
+	return false
 }

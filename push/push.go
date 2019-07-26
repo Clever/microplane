@@ -75,7 +75,7 @@ func (o Output) String() string {
 }
 
 // Push pushes the commit to Github and opens a pull request
-func Push(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
+func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
 	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
@@ -122,20 +122,20 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimi
 		Body:  &body,
 		Head:  &head,
 		Base:  &base,
-	}, githubLimiter, pushLimiter)
+	}, repoLimiter, pushLimiter)
 	if err != nil {
 		return Output{Success: false}, err
 	}
 
 	if pr.Assignee == nil || pr.Assignee.Login == nil || *pr.Assignee.Login != input.PRAssignee {
-		<-githubLimiter.C
+		<-repoLimiter.C
 		_, _, err := client.Issues.AddAssignees(ctx, input.RepoOwner, input.RepoName, *pr.Number, []string{input.PRAssignee})
 		if err != nil {
 			return Output{Success: false}, err
 		}
 	}
 
-	<-githubLimiter.C
+	<-repoLimiter.C
 	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
 	if err != nil {
 		return Output{Success: false}, err
@@ -168,13 +168,13 @@ func Push(ctx context.Context, input Input, githubLimiter *time.Ticker, pushLimi
 	}, nil
 }
 
-func findOrCreatePR(ctx context.Context, client *github.Client, owner string, name string, pull *github.NewPullRequest, githubLimiter *time.Ticker, pushLimiter *time.Ticker) (*github.PullRequest, error) {
+func findOrCreatePR(ctx context.Context, client *github.Client, owner string, name string, pull *github.NewPullRequest, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (*github.PullRequest, error) {
 	var pr *github.PullRequest
 	<-pushLimiter.C
-	<-githubLimiter.C
+	<-repoLimiter.C
 	newPR, _, err := client.PullRequests.Create(ctx, owner, name, pull)
 	if err != nil && strings.Contains(err.Error(), "pull request already exists") {
-		<-githubLimiter.C
+		<-repoLimiter.C
 		existingPRs, _, err := client.PullRequests.List(ctx, owner, name, &github.PullRequestListOptions{
 			Head: *pull.Head,
 			Base: *pull.Base,
@@ -190,7 +190,7 @@ func findOrCreatePR(ctx context.Context, client *github.Client, owner string, na
 		if different(pr.Title, pull.Title) || different(pr.Body, pull.Body) {
 			pr.Title = pull.Title
 			pr.Body = pull.Body
-			<-githubLimiter.C
+			<-repoLimiter.C
 			pr, _, err = client.PullRequests.Edit(ctx, owner, name, *pr.Number, pr)
 			if err != nil {
 				return nil, err

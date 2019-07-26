@@ -17,7 +17,7 @@ var cliVersion string
 
 // Github's rate limit for authenticated requests is 5000 QPH = 83.3 QPM = 1.38 QPS = 720ms/query
 // We also use a global limiter to prevent concurrent requests, which trigger Github's abuse detection
-var githubLimiter = time.NewTicker(720 * time.Millisecond)
+var repoLimiter = time.NewTicker(720 * time.Millisecond)
 
 var rootCmd = &cobra.Command{
 	Use:   "mp",
@@ -25,14 +25,21 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
-	if os.Getenv("GITHUB_API_TOKEN") == "" {
-		log.Fatalf("GITHUB_API_TOKEN env var is not set. In order to use microplane, create a token (https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) then set the env var.")
+	if os.Getenv("GITLAB_API_TOKEN") != "" && os.Getenv("GITHUB_API_TOKEN") != "" {
+		log.Fatalf("GITLAB_API_TOKEN and GITHUB_API_TOKEN can't be set both")
+	} else if os.Getenv("GITHUB_API_TOKEN") != "" {
+		repoProviderFlag = "github"
+	} else if os.Getenv("GITLAB_API_TOKEN") != "" {
+		repoProviderFlag = "gitlab"
+	} else {
+		log.Fatalf(`Neither GITHUB_API_TOKEN or GITLAB_API_TOKEN env var is not set.
+		    In order to use microplane with Github, create a token (https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) then set the env var.
+		    In order to use microplane with Gitlab, create a token (https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) then set the env var.`)
 	}
 
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
 	rootCmd.AddCommand(docsCmd)
-	rootCmd.AddCommand(initCmd)
 
 	rootCmd.AddCommand(mergeCmd)
 	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "1ms", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
@@ -49,6 +56,8 @@ func init() {
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
 
 	rootCmd.AddCommand(statusCmd)
+
+	rootCmd.AddCommand(initCmd)
 
 	workDir, _ = filepath.Abs("./mp")
 
