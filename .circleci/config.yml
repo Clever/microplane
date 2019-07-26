@@ -8,6 +8,9 @@ jobs:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "8e:93:7e:53:e8:0e:72:4f:f1:9c:0f:50:66:55:5e:f1" # GitLab
       - run:
           command: cd $HOME && git clone --depth 1 -v https://github.com/Clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
           name: Clone ci-scripts
