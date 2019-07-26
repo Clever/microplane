@@ -8,7 +8,7 @@ import (
 	"sort"
 
 	"github.com/google/go-github/github"
-	"github.com/xanzy/go-gitlab"
+	gitlab "github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 )
 
@@ -119,35 +119,54 @@ func githubSearch(query string) ([]Repo, error) {
 // https://docs.gitlab.com/ee/user/search/advanced_global_search.html
 // https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html
 func gitlabSearch(query string) ([]Repo, error) {
-	var blobsProjectIDs []int
+	var projectIDs []int
+
 	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
+	isEnterprise := false
 	if os.Getenv("GITLAB_URL") != "" {
+		isEnterprise = true
 		client.SetBaseURL(os.Getenv("GITLAB_URL"))
 	}
+
+	repos := []Repo{}
 	opt := &gitlab.SearchOptions{
 		PerPage: 20,
 	}
-	blobs, _, err := client.Search.Blobs(query, opt)
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, blob := range blobs {
-		if !contains(blobsProjectIDs, blob.ProjectID) {
-			blobsProjectIDs = append(blobsProjectIDs, blob.ProjectID)
-		}
-	}
-	repos := []Repo{}
-	for _, i := range blobsProjectIDs {
-		project, _, err := client.Projects.GetProject(i, nil)
+	if isEnterprise {
+		blobs, _, err := client.Search.Blobs(query, opt)
 		if err != nil {
 			fmt.Println(err)
 		}
-		repos = append(repos, Repo{
-			Name:     project.Name,
-			Owner:    project.Namespace.FullPath,
-			CloneURL: project.SSHURLToRepo,
-			Provider: "gitlab",
-		})
+		for _, blob := range blobs {
+			if !contains(projectIDs, blob.ProjectID) {
+				projectIDs = append(projectIDs, blob.ProjectID)
+			}
+		}
+		for _, i := range projectIDs {
+			project, _, err := client.Projects.GetProject(i, nil)
+			if err != nil {
+				fmt.Println(err)
+			}
+			repos = append(repos, Repo{
+				Name:     project.Name,
+				Owner:    project.Namespace.FullPath,
+				CloneURL: project.SSHURLToRepo,
+				Provider: "gitlab",
+			})
+		}
+	} else {
+		projects, _, err := client.Search.Projects(query, opt)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, project := range projects {
+			repos = append(repos, Repo{
+				Name:     project.Name,
+				Owner:    project.Namespace.FullPath,
+				CloneURL: project.SSHURLToRepo,
+				Provider: "gitlab",
+			})
+		}
 	}
 	return repos, nil
 }
