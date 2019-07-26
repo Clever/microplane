@@ -23,5 +23,5 @@ jobs:
             GITHUB_API_TOKEN: x
             GITLAB_API_TOKEN: "" # both cannot be set
       - run:
-          command: ./gitlab_integration_test.sh
+          command: ssh-keyscan -H gitlab.com >> ~/.ssh/known_hosts && ./gitlab_integration_test.sh
       - run: if [ "${CIRCLE_BRANCH}" == "master" ]; then make release && $HOME/ci-scripts/circleci/github-release $GH_RELEASE_TOKEN release; fi;
