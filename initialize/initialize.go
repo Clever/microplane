@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"net/url"
 
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
@@ -73,6 +74,13 @@ func githubSearch(query string) ([]Repo, error) {
 
 	client := github.NewClient(tc)
 
+	if os.Getenv("GITHUB_URL") != "" {
+		baseEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL"))
+		client.BaseURL = baseEndpoint
+		uploadEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL") + "upload/")
+		client.UploadURL = uploadEndpoint
+	}
+
 	opts := &github.SearchOptions{}
 	allRepos := map[string]*github.Repository{}
 	numProcessedResults := 0
@@ -100,12 +108,18 @@ func githubSearch(query string) ([]Repo, error) {
 		opts.Page = resp.NextPage
 	}
 
+	hostname := "github.com"
+	if os.Getenv("GITHUB_URL") != "" {
+		baseEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL"))
+		hostname = baseEndpoint.Hostname()
+	}
+
 	repos := []Repo{}
 	for _, r := range allRepos {
 		repos = append(repos, Repo{
 			Name:     r.GetName(),
 			Owner:    r.Owner.GetLogin(),
-			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			CloneURL: fmt.Sprintf("git@%s:%s", hostname, r.GetFullName()),
 			Provider: "github",
 		})
 	}

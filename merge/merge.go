@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"net/url"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -50,6 +51,13 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
+
+	if os.Getenv("GITHUB_URL") != "" {
+		baseEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL"))
+		client.BaseURL = baseEndpoint
+		uploadEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL") + "upload/")
+		client.UploadURL = uploadEndpoint
+	}
 
 	// OK to merge?
 

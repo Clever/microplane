@@ -101,6 +101,13 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	tc := oauth2.NewClient(ctx, ts)
 	client := github.NewClient(tc)
 
+	if os.Getenv("GITHUB_URL") != "" {
+		baseEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL"))
+		client.BaseURL = baseEndpoint
+		uploadEndpoint, _ := url.Parse(os.Getenv("GITHUB_URL") + "upload/")
+		client.UploadURL = uploadEndpoint
+	}
+
 	// Open a pull request, if one doesn't exist already
 	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
 	base := "master"

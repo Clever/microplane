@@ -25,6 +25,9 @@ First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this ca
 
 The `GITHUB_API_TOKEN` environment variable must be set for Github. This should be a [GitHub Token](https://github.com/settings/tokens) with `repo` scope.
 
+Optionally: The `GITHUB_URL` environment variable can be set to use a Github Enterprise setup, otherwise it will use https://github.com.
+The `GITHUB_URL` **must** be a valid URL for the API endpoint including a trailing slash: e.g. `https://git.yourcompany.com/api/v3/`
+
 ### GitLab setup
 
 The `GITLAB_API_TOKEN` environment variable must be set for Gitlab. This should be a [GitLab access token](https://gitlab.com/profile/personal_access_tokens)
