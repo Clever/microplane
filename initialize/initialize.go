@@ -3,9 +3,11 @@ package initialize
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
@@ -22,10 +24,11 @@ type Repo struct {
 
 // Input for Initialize
 type Input struct {
-	WorkDir      string
-	Query        string
-	Version      string
-	RepoProvider string
+	WorkDir       string
+	Query         string
+	Version       string
+	RepoProvider  string
+	ReposFromFile string
 }
 
 // Output for Initialize
@@ -45,19 +48,71 @@ func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func Initialize(input Input) (Output, error) {
 	var repos []Repo
 	var err error
-	if input.RepoProvider == "github" {
-		repos, err = githubSearch(input.Query)
-	} else if input.RepoProvider == "gitlab" {
-		repos, err = gitlabSearch(input.Query)
+	if input.ReposFromFile != "" {
+		// Read repos from file
+		repos, err = reposFromFile(input)
+	} else {
+		// Do code search
+		if input.RepoProvider == "github" {
+			repos, err = githubSearch(input.Query)
+		} else if input.RepoProvider == "gitlab" {
+			repos, err = gitlabSearch(input.Query)
+		}
 	}
+
 	if err != nil {
 		return Output{}, err
 	}
+
 	sort.Sort(ByName(repos))
+	repos = dedupe(repos)
 	return Output{
 		Version: input.Version,
 		Repos:   repos,
 	}, nil
+}
+
+func dedupe(repos []Repo) []Repo {
+	out := []Repo{}
+	seen := map[Repo]struct{}{}
+
+	for _, r := range repos {
+		_, isDupe := seen[r]
+		if isDupe {
+			continue
+		}
+		seen[r] = struct{}{}
+		out = append(out, r)
+	}
+	return out
+}
+
+func reposFromFile(input Input) ([]Repo, error) {
+	// read file
+	bs, err := ioutil.ReadFile(input.ReposFromFile)
+	if err != nil {
+		return []Repo{}, err
+	}
+
+	repos := []Repo{}
+	items := strings.Split(string(bs), "\n")
+	for _, item := range items {
+		if item == "" {
+			// in case file ends with newline, ignore it
+			continue
+		}
+		parts := strings.Split(item, "/")
+		if len(parts) != 2 {
+			return []Repo{}, fmt.Errorf("unable determine repo from line, expected format '{org}/{repo}': %s", item)
+		}
+		repos = append(repos, Repo{
+			Owner:    parts[0],
+			Name:     parts[1],
+			CloneURL: fmt.Sprintf("git@%s.com:%s", input.RepoProvider, item),
+			Provider: input.RepoProvider,
+		})
+	}
+	return repos, nil
 }
 
 // githubSearch queries github and returns a list of matching repos
@@ -79,7 +134,7 @@ func githubSearch(query string) ([]Repo, error) {
 	for {
 		result, resp, err := client.Search.Code(context.Background(), query, opts)
 		if err != nil {
-			log.Printf("Search.Code returned error: %v", err)
+			return []Repo{}, err
 		}
 
 		for _, codeResult := range result.CodeResults {
