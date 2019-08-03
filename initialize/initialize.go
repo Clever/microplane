@@ -129,43 +129,63 @@ func gitlabSearch(query string) ([]Repo, error) {
 	}
 
 	repos := []Repo{}
+	repoNames := make(map[string]bool)
 	opt := &gitlab.SearchOptions{
 		PerPage: 20,
+		Page:    1,
 	}
 	if isEnterprise {
-		blobs, _, err := client.Search.Blobs(query, opt)
-		if err != nil {
-			fmt.Println(err)
-		}
-		for _, blob := range blobs {
-			if !contains(projectIDs, blob.ProjectID) {
-				projectIDs = append(projectIDs, blob.ProjectID)
-			}
-		}
-		for _, i := range projectIDs {
-			project, _, err := client.Projects.GetProject(i, nil)
+		for {
+			blobs, resp, err := client.Search.Blobs(query, opt)
 			if err != nil {
 				fmt.Println(err)
 			}
-			repos = append(repos, Repo{
-				Name:     project.Name,
-				Owner:    project.Namespace.FullPath,
-				CloneURL: project.SSHURLToRepo,
-				Provider: "gitlab",
-			})
+			for _, blob := range blobs {
+				if !contains(projectIDs, blob.ProjectID) {
+					projectIDs = append(projectIDs, blob.ProjectID)
+				}
+			}
+			for _, i := range projectIDs {
+				project, _, err := client.Projects.GetProject(i, nil)
+				if err != nil {
+					fmt.Println(err)
+				}
+				if _, ok := repoNames[project.Name]; !ok {
+					repos = append(repos, Repo{
+						Name:     project.Name,
+						Owner:    project.Namespace.FullPath,
+						CloneURL: project.SSHURLToRepo,
+						Provider: "gitlab",
+					})
+					repoNames[project.Name] = true
+				}
+			}
+			if resp.CurrentPage >= resp.TotalPages {
+				break
+			}
+			opt.Page = resp.NextPage
 		}
 	} else {
-		projects, _, err := client.Search.Projects(query, opt)
-		if err != nil {
-			fmt.Println(err)
-		}
-		for _, project := range projects {
-			repos = append(repos, Repo{
-				Name:     project.Name,
-				Owner:    project.Namespace.FullPath,
-				CloneURL: project.SSHURLToRepo,
-				Provider: "gitlab",
-			})
+		for {
+			projects, resp, err := client.Search.Projects(query, opt)
+			if err != nil {
+				fmt.Println(err)
+			}
+			for _, project := range projects {
+				if _, ok := repoNames[project.Name]; !ok {
+					repos = append(repos, Repo{
+						Name:     project.Name,
+						Owner:    project.Namespace.FullPath,
+						CloneURL: project.SSHURLToRepo,
+						Provider: "gitlab",
+					})
+					repoNames[project.Name] = true
+				}
+			}
+			if resp.CurrentPage >= resp.TotalPages {
+				break
+			}
+			opt.Page = resp.NextPage
 		}
 	}
 	return repos, nil
