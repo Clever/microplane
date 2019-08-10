@@ -13,11 +13,7 @@ _"the lemon is Git{Hub,Lab}"_
 
 You can download a pre-built version of Microplane from the [Github releases](https://github.com/Clever/microplane/releases).
 
-### Build Locally
-
-Microplane is a Golang project. It uses [`dep`](https://github.com/golang/dep) for vendoring.
-
-First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this calls `dep`). To build, run `make build`. You should now have a working build of Microplane in `./bin/mp`.
+Alternately, you can download via `go get github.com/clever/microplane/cmd`. In this case the binary will be installed to `$GOPATH/bin/microplane`
 
 ## Usage
 
@@ -44,7 +40,15 @@ To make a change, use the following series of commands.
 
 For an in-depth example, check out the [introductory blogpost](https://medium.com/always-a-student/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-293ad7d418f0).
 
-## Implementation
+## Development
+
+### Build Locally
+
+Microplane is a Golang project. It uses [`dep`](https://github.com/golang/dep) for vendoring.
+
+First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this calls `dep`). To build, run `make build`. You should now have a working build of Microplane in `./bin/mp`.
+
+### Design
 
 Microplane parallelizes various git commands and API calls.
 
@@ -69,3 +73,11 @@ mp/
   repo2/
     ...
 ```
+
+### Releasing
+
+To publish a release:
+
+- PR then merge changes to master.
+- Push another commit, updating `VERSION` with the new version and `CHANGELOG.md` with a description of the changes.
+- CircleCI will publish a release to GitHub.
