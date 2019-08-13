@@ -58,8 +58,12 @@ func init() {
 	rootCmd.AddCommand(statusCmd)
 
 	rootCmd.AddCommand(initCmd)
+	initCmd.Flags().StringVarP(&initFlagReposFile, "file", "f", "", "get repos from a file instead of searching")
 
-	workDir, _ = filepath.Abs("./mp")
+	workDir, err := filepath.Abs("./mp")
+	if err != nil {
+		log.Fatalf("error finding workDir: %s\n", err.Error())
+	}
 
 	// Create workDir, if doesn't yet exist
 	if _, err := os.Stat(workDir); os.IsNotExist(err) {

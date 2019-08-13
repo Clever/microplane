@@ -21,4 +21,5 @@ jobs:
         command: make test
         environment:
           GITHUB_API_TOKEN: x
+          GITLAB_API_TOKEN: ""
     - run: if [ "${CIRCLE_BRANCH}" == "master" ]; then make release && $HOME/ci-scripts/circleci/github-release $GH_RELEASE_TOKEN release; fi;
