@@ -42,7 +42,7 @@ func init() {
 	rootCmd.AddCommand(docsCmd)
 
 	rootCmd.AddCommand(mergeCmd)
-	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "1ms", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
+	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "30s", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
 	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreReviewApproval, "ignore-review-approval", false, "Ignore whether or not the review has been approved")
 	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreBuildStatus, "ignore-build-status", false, "Ignore whether or not builds are passing")
 
@@ -51,7 +51,7 @@ func init() {
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
 
 	rootCmd.AddCommand(pushCmd)
-	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "1ms", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
+	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "30s", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
 	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
 
