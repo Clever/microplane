@@ -88,11 +88,11 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Org, input.Repo, input.PRNumber, &github.ListOptions{})
 	if input.RequireReviewApproval {
 		if len(reviews) == 0 {
-			return Output{Success: false}, fmt.Errorf("PR awaiting review")
+			return Output{Success: false}, fmt.Errorf("PR awaiting review. Use --ignore-review-approval to override this check.")
 		}
 		for _, r := range reviews {
 			if r.GetState() != "APPROVED" {
-				return Output{Success: false}, fmt.Errorf("PR is not approved. Review state is %s", r.GetState())
+				return Output{Success: false}, fmt.Errorf("PR is not approved. Review state is %s. Use --ignore-review-approval to override this check.", r.GetState())
 			}
 		}
 	}

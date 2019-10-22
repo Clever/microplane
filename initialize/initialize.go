@@ -8,6 +8,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
@@ -133,7 +134,17 @@ func githubSearch(query string) ([]Repo, error) {
 	numProcessedResults := 0
 	for {
 		result, resp, err := client.Search.Code(context.Background(), query, opts)
-		if err != nil {
+		if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
+			var waitTime time.Duration
+			if abuseErr.RetryAfter != nil {
+				waitTime = *abuseErr.RetryAfter
+			} else {
+				waitTime = 10 * time.Second
+			}
+			log.Printf("Triggered Github abuse detection - waiting %v then trying again.\n", waitTime)
+			time.Sleep(waitTime)
+			continue
+		} else if err != nil {
 			return []Repo{}, err
 		}
 
@@ -145,7 +156,7 @@ func githubSearch(query string) ([]Repo, error) {
 
 		incompleteResults := result.GetIncompleteResults()
 		if incompleteResults {
-			log.Println("WARNING: Github API timed out before completing query")
+			log.Println("WARNING: Github API timed out before completing query. Querying again for additional results.")
 			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *result.Total, resp.NextPage)
 		}
 
