@@ -79,7 +79,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	if input.RequireBuildSuccess {
 		state := status.GetState()
 		if state != "success" {
-			return Output{Success: false}, fmt.Errorf("status was not 'success', instead was '%s'", state)
+			return Output{Success: false}, fmt.Errorf("Build status was not 'success', instead was '%s'. Use --ignore-build-status to override this check.", state)
 		}
 	}
 

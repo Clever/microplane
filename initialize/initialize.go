@@ -156,7 +156,6 @@ func githubSearch(query string) ([]Repo, error) {
 
 		incompleteResults := result.GetIncompleteResults()
 		if incompleteResults {
-			log.Println("WARNING: Github API timed out before completing query. Querying again for additional results.")
 			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *result.Total, resp.NextPage)
 		}
 
