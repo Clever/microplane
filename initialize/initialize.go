@@ -30,6 +30,7 @@ type Input struct {
 	Version       string
 	RepoProvider  string
 	ReposFromFile string
+	SearchRepos   bool // if false (default), search code and collect the matching repos
 }
 
 // Output for Initialize
@@ -49,16 +50,17 @@ func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func Initialize(input Input) (Output, error) {
 	var repos []Repo
 	var err error
-	if input.ReposFromFile != "" {
-		// Read repos from file
+	switch {
+	case input.ReposFromFile != "":
 		repos, err = reposFromFile(input)
-	} else {
-		// Do code search
-		if input.RepoProvider == "github" {
-			repos, err = githubSearch(input.Query)
-		} else if input.RepoProvider == "gitlab" {
-			repos, err = gitlabSearch(input.Query)
-		}
+	case input.RepoProvider == "github" && input.SearchRepos:
+		repos, err = githubRepoSearch(input.Query)
+	case input.RepoProvider == "github" && !input.SearchRepos:
+		repos, err = githubCodeSearch(input.Query)
+	case input.RepoProvider == "gitlab" && input.SearchRepos:
+		return Output{}, fmt.Errorf("Repo search for gitlab not supported")
+	case input.RepoProvider == "gitlab" && !input.SearchRepos:
+		repos, err = gitlabSearch(input.Query)
 	}
 
 	if err != nil {
@@ -116,11 +118,7 @@ func reposFromFile(input Input) ([]Repo, error) {
 	return repos, nil
 }
 
-// githubSearch queries github and returns a list of matching repos
-//
-// GitHub Code Search Syntax:
-// https://help.github.com/articles/searching-code/
-func githubSearch(query string) ([]Repo, error) {
+func githubClientFromEnv() *github.Client {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
@@ -129,11 +127,18 @@ func githubSearch(query string) ([]Repo, error) {
 
 	client := github.NewClient(tc)
 
+	return client
+}
+
+type GithubQueryFunc func(ctx context.Context, query string, opts *github.SearchOptions) (interface{}, *github.Response, error)
+type GithubCallbackFunc func(results interface{}, resp *github.Response) error
+
+func PaginateGithubQuery(queryFunc GithubQueryFunc,
+	query string, callback GithubCallbackFunc) error {
+
 	opts := &github.SearchOptions{}
-	allRepos := map[string]*github.Repository{}
-	numProcessedResults := 0
 	for {
-		result, resp, err := client.Search.Code(context.Background(), query, opts)
+		result, resp, err := queryFunc(context.Background(), query, opts)
 		if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
 			var waitTime time.Duration
 			if abuseErr.RetryAfter != nil {
@@ -145,18 +150,12 @@ func githubSearch(query string) ([]Repo, error) {
 			time.Sleep(waitTime)
 			continue
 		} else if err != nil {
-			return []Repo{}, err
+			return err
 		}
 
-		for _, codeResult := range result.CodeResults {
-			numProcessedResults = numProcessedResults + 1
-			repoCopy := *codeResult.Repository
-			allRepos[*codeResult.Repository.Name] = &repoCopy
-		}
-
-		incompleteResults := result.GetIncompleteResults()
-		if incompleteResults {
-			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *result.Total, resp.NextPage)
+		err = callback(result, resp)
+		if err != nil {
+			return fmt.Errorf("Callback error: %v", err)
 		}
 
 		if resp.NextPage == 0 {
@@ -164,6 +163,81 @@ func githubSearch(query string) ([]Repo, error) {
 		}
 		opts.Page = resp.NextPage
 	}
+	return nil
+}
+
+// githubSearch queries github and returns a list of matching repos
+
+// GitHub Code Search Syntax:
+// https://help.github.com/articles/searching-code/
+func githubCodeSearch(query string) ([]Repo, error) {
+
+	allRepos := map[string]*github.Repository{}
+	numProcessedResults := 0
+
+	callback := func(results interface{}, resp *github.Response) error {
+		codeSearchResult, ok := results.(*github.CodeSearchResult)
+		if !ok {
+			return fmt.Errorf("Something went wrong")
+		}
+		for _, codeResult := range codeSearchResult.CodeResults {
+			numProcessedResults = numProcessedResults + 1
+			repoCopy := *codeResult.Repository
+			allRepos[*codeResult.Repository.Name] = &repoCopy
+		}
+		incompleteResults := codeSearchResult.GetIncompleteResults()
+		if incompleteResults {
+			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *codeSearchResult.Total, resp.NextPage)
+		}
+		return nil
+	}
+
+	client := githubClientFromEnv()
+	queryFunc := GithubQueryFunc(func(ctx context.Context, query string, opts *github.SearchOptions) (interface{}, *github.Response, error) {
+		return client.Search.Code(ctx, query, opts)
+	})
+	PaginateGithubQuery(queryFunc, query, callback)
+
+	repos := []Repo{}
+	for _, r := range allRepos {
+		repos = append(repos, Repo{
+			Name:     r.GetName(),
+			Owner:    r.Owner.GetLogin(),
+			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			Provider: "github",
+		})
+	}
+
+	return repos, nil
+}
+
+func githubRepoSearch(query string) ([]Repo, error) {
+
+	allRepos := map[string]*github.Repository{}
+	numProcessedResults := 0
+
+	callback := func(results interface{}, resp *github.Response) error {
+		repoSearchResult, ok := results.(*github.RepositoriesSearchResult)
+		if !ok {
+			return fmt.Errorf("Something went wrong")
+		}
+		for _, repo := range repoSearchResult.Repositories {
+			numProcessedResults = numProcessedResults + 1
+			repoCopy := repo
+			allRepos[*repo.Name] = &repoCopy
+		}
+		incompleteResults := repoSearchResult.GetIncompleteResults()
+		if incompleteResults {
+			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *repoSearchResult.Total, resp.NextPage)
+		}
+		return nil
+	}
+
+	client := githubClientFromEnv()
+	queryFunc := GithubQueryFunc(func(ctx context.Context, query string, opts *github.SearchOptions) (interface{}, *github.Response, error) {
+		return client.Search.Repositories(ctx, query, opts)
+	})
+	PaginateGithubQuery(queryFunc, query, callback)
 
 	repos := []Repo{}
 	for _, r := range allRepos {

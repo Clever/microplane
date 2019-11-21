@@ -11,6 +11,7 @@ import (
 
 var repoProviderFlag string
 var initFlagReposFile string
+var initFlagRepoSearch bool
 
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
@@ -76,6 +77,7 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 			Version:       cliVersion,
 			RepoProvider:  repoProviderFlag,
 			ReposFromFile: initFlagReposFile,
+			SearchRepos:   initFlagRepoSearch,
 		})
 		if err != nil {
 			log.Fatal(err)
