@@ -133,7 +133,7 @@ func githubSearch(query string) ([]Repo, error) {
 	allRepos := map[string]*github.Repository{}
 	numProcessedResults := 0
 	for {
-		result, resp, err := client.Search.Code(context.Background(), query, opts)
+		result, resp, err := client.Search.Repositories(context.Background(), query, opts)
 		if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
 			var waitTime time.Duration
 			if abuseErr.RetryAfter != nil {
@@ -148,10 +148,9 @@ func githubSearch(query string) ([]Repo, error) {
 			return []Repo{}, err
 		}
 
-		for _, codeResult := range result.CodeResults {
+		for _, repoResult := range result.Repositories {
 			numProcessedResults = numProcessedResults + 1
-			repoCopy := *codeResult.Repository
-			allRepos[*codeResult.Repository.Name] = &repoCopy
+			allRepos[*repoResult.Name] = &repoResult
 		}
 
 		incompleteResults := result.GetIncompleteResults()
