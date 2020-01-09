@@ -49,11 +49,11 @@ Search targets repos based on a Github Repo Search query.
 
 For example:
 
-$ mp init -rs "org:Clever"
+$ mp init -s "org:Clever"
 
 would target all Clever repos in clever org.
 
-$ mp init -rs "org:Clever language:Go"
+$ mp init -s "org:Clever language:Go"
 
 would target all Clever repos written in Go
 

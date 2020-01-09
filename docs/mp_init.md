@@ -55,7 +55,7 @@ mp init [query] [flags]
 ```
   -f, --file         string   get repos from a file instead of searching
   -h, --help                  help for init
-  -rs, --repo-search string   get repos from a github repo search
+  -s, --repo-search  string   get repos from a github repo search
 ```
 
 ### Options inherited from parent commands
