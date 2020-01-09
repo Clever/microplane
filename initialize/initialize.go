@@ -25,11 +25,12 @@ type Repo struct {
 
 // Input for Initialize
 type Input struct {
-	WorkDir       string
-	Query         string
-	Version       string
-	RepoProvider  string
-	ReposFromFile string
+	WorkDir         string
+	Query           string
+	Version         string
+	RepoProvider    string
+	ReposFromFile   string
+	RepoSearchQuery string
 }
 
 // Output for Initialize
@@ -52,6 +53,9 @@ func Initialize(input Input) (Output, error) {
 	if input.ReposFromFile != "" {
 		// Read repos from file
 		repos, err = reposFromFile(input)
+	} else if input.RepoSearchQuery != "" {
+		// Do search with Repo type only
+		repos, err = githubRepoSearch(input.RepoSearchQuery)
 	} else {
 		// Do code search
 		if input.RepoProvider == "github" {
@@ -121,6 +125,64 @@ func reposFromFile(input Input) ([]Repo, error) {
 // GitHub Code Search Syntax:
 // https://help.github.com/articles/searching-code/
 func githubSearch(query string) ([]Repo, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	opts := &github.SearchOptions{}
+	allRepos := map[string]*github.Repository{}
+	numProcessedResults := 0
+	for {
+		result, resp, err := client.Search.Code(context.Background(), query, opts)
+		if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
+			var waitTime time.Duration
+			if abuseErr.RetryAfter != nil {
+				waitTime = *abuseErr.RetryAfter
+			} else {
+				waitTime = 10 * time.Second
+			}
+			log.Printf("Triggered Github abuse detection - waiting %v then trying again.\n", waitTime)
+			time.Sleep(waitTime)
+			continue
+		} else if err != nil {
+			return []Repo{}, err
+		}
+
+		for _, codeResult := range result.CodeResults {
+			numProcessedResults = numProcessedResults + 1
+			repoCopy := *codeResult.Repository
+			allRepos[*codeResult.Repository.Name] = &repoCopy
+		}
+
+		incompleteResults := result.GetIncompleteResults()
+		if incompleteResults {
+			log.Printf("processed %d of about %d results -- next page is %d", numProcessedResults, *result.Total, resp.NextPage)
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+
+	repos := []Repo{}
+	for _, r := range allRepos {
+		repos = append(repos, Repo{
+			Name:     r.GetName(),
+			Owner:    r.Owner.GetLogin(),
+			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			Provider: "github",
+		})
+	}
+
+	return repos, nil
+}
+
+func githubRepoSearch(query string) ([]Repo, error) {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
