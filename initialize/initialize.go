@@ -25,12 +25,12 @@ type Repo struct {
 
 // Input for Initialize
 type Input struct {
-	WorkDir         string
-	Query           string
-	Version         string
-	RepoProvider    string
-	ReposFromFile   string
-	RepoSearchQuery string
+	WorkDir       string
+	Query         string
+	Version       string
+	RepoProvider  string
+	ReposFromFile string
+	RepoSearch    bool
 }
 
 // Output for Initialize
@@ -53,9 +53,9 @@ func Initialize(input Input) (Output, error) {
 	if input.ReposFromFile != "" {
 		// Read repos from file
 		repos, err = reposFromFile(input)
-	} else if input.RepoSearchQuery != "" {
+	} else if input.RepoSearch {
 		// Do search with Repo type only
-		repos, err = githubRepoSearch(input.RepoSearchQuery)
+		repos, err = githubRepoSearch(input.Query)
 	} else {
 		// Do code search
 		if input.RepoProvider == "github" {
