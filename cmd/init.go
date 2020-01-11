@@ -11,6 +11,7 @@ import (
 
 var repoProviderFlag string
 var initFlagReposFile string
+var repoSearch bool
 
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
@@ -30,9 +31,9 @@ where repos.txt has lines like:
 
 ## (2) Init via Search
 
-### GitHub
+### GitHub Code Search
 
-Search targets repos based on a Github Code Search query.
+- Search target repos based on a Github Code Search query.
 
 For example:
 
@@ -42,9 +43,25 @@ would target all Clever repos with a circle.yml file.
 
 See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
 
+### Github Repo Search
+
+- Search target repos based on a Github Repo Search query.
+
+For example:
+
+$ mp init "org:Clever" --repo-search
+
+would target all Clever repos in clever org.
+
+$ mp init "org:Clever language:Go" --repo-search
+
+would target all Clever repos written in Go
+
+See https://help.github.com/articles/searching-repositories/ for more details about the search syntax on Github.
+
 ### GitLab
 
-Search targets repos based on a GitLab search.
+Search target repos based on a GitLab search.
 
 If you are using the *public* version of GitLab, search is done via the Global "projects" scope.
 See https://docs.gitlab.com/ce/api/search.html#scope-projects for more information on the search syntax. For example
@@ -58,11 +75,13 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 	Args: cobra.RangeArgs(0, 1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 && initFlagReposFile == "" {
-			log.Fatal("to init via search, you must pass a search query. otherwise, specify a repos file with -f")
+			log.Fatal("to init via code search (default), you must pass a search query. If init from a repo file, specify a repos file with -f." +
+				"If init with a github repo search, include --repo-search flag.")
 		}
 
 		if len(args) == 1 && initFlagReposFile != "" {
-			log.Fatal("to init via search, you must pass a search query. otherwise, specify a repos file with -f")
+			log.Fatal("to init via code search (default), you must pass a search query. If init from a repo file, specify a repos file with -f." +
+				"If init with a github repo search, include --repo-search flag.")
 		}
 
 		query := ""
@@ -76,6 +95,7 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 			Version:       cliVersion,
 			RepoProvider:  repoProviderFlag,
 			ReposFromFile: initFlagReposFile,
+			RepoSearch:    repoSearch,
 		})
 		if err != nil {
 			log.Fatal(err)
