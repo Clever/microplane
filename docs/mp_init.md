@@ -22,7 +22,7 @@ where repos.txt has lines like:
 
 ### GitHub
 
-- Search target repos based on a Github Code Search query.
+Search targets repos based on a Github Code Search query.
 
 For example:
 
@@ -32,23 +32,9 @@ would target all Clever repos with a circle.yml file.
 
 See https://help.github.com/articles/searching-code/ for more details about the search syntax on Github.
 
-- Search target repos based on a Github Repo Search query.
-
-For exampel:
-
-$mp init "org:Clever" --repo-search
-
-would target all Clever repos
-
-$ mp init "org:Clever language:Go" --repo-search
-
-would target all Clever repos written in Go
-
-See https://help.github.com/articles/searching-repositories/ for more details about the search syntax on Github.
-
 ### GitLab
 
-Search target repos based on a GitLab search.
+Search targets repos based on a GitLab search.
 
 If you are using the *public* version of GitLab, search is done via the Global "projects" scope.
 See https://docs.gitlab.com/ce/api/search.html#scope-projects for more information on the search syntax. For example
@@ -67,9 +53,8 @@ mp init [query] [flags]
 ### Options
 
 ```
-  -f, --file         string   get repos from a file instead of searching
-  -h, --help                  help for init
-  --repo-search      bool     get repos from a github repo search
+  -f, --file string   get repos from a file instead of searching
+  -h, --help          help for init
 ```
 
 ### Options inherited from parent commands
