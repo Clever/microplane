@@ -172,18 +172,7 @@ func githubSearch(query string) ([]Repo, error) {
 		}
 		opts.Page = resp.NextPage
 	}
-
-	repos := []Repo{}
-	for _, r := range allRepos {
-		repos = append(repos, Repo{
-			Name:     r.GetName(),
-			Owner:    r.Owner.GetLogin(),
-			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
-			Provider: "github",
-		})
-	}
-
-	return repos, nil
+	return getFormattedRepos(allRepos), nil
 }
 
 func githubRepoSearch(query string) ([]Repo, error) {
@@ -230,17 +219,7 @@ func githubRepoSearch(query string) ([]Repo, error) {
 		opts.Page = resp.NextPage
 	}
 
-	repos := []Repo{}
-	for _, r := range allRepos {
-		repos = append(repos, Repo{
-			Name:     r.GetName(),
-			Owner:    r.Owner.GetLogin(),
-			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
-			Provider: "github",
-		})
-	}
-
-	return repos, nil
+	return getFormattedRepos(allRepos), nil
 }
 
 func githubAllRepoSearch(query string) ([]Repo, error) {
@@ -286,16 +265,20 @@ func githubAllRepoSearch(query string) ([]Repo, error) {
 		}
 		opts.Page = resp.NextPage
 	}
-	repos := []Repo{}
+	return getFormattedRepos(allRepos), nil
+}
+
+func getFormattedRepos(allRepos map[string]*github.Repository) []Repo {
+	formattedRepos := []Repo{}
 	for _, r := range allRepos {
-		repos = append(repos, Repo{
+		formattedRepos = append(formattedRepos, Repo{
 			Name:     r.GetName(),
 			Owner:    r.Owner.GetLogin(),
 			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
 			Provider: "github",
 		})
 	}
-	return repos, nil
+	return formattedRepos
 }
 
 // gitlabSearch queries gitlab and returns a list of matching repos
