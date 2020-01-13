@@ -60,6 +60,7 @@ func init() {
 	rootCmd.AddCommand(initCmd)
 	initCmd.Flags().StringVarP(&initFlagReposFile, "file", "f", "", "get repos from a file instead of searching")
 	initCmd.Flags().BoolVar(&repoSearch, "repo-search", false, "get repos from a github repo search")
+	initCmd.Flags().BoolVar(&allRepos, "all-repos", false, "get all repos for a given org")
 
 	var err error
 	workDir, err = filepath.Abs("./mp")

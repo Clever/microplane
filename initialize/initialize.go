@@ -25,6 +25,7 @@ type Repo struct {
 
 // Input for Initialize
 type Input struct {
+	AllRepos      bool
 	WorkDir       string
 	Query         string
 	Version       string
@@ -56,6 +57,9 @@ func Initialize(input Input) (Output, error) {
 	} else if input.RepoSearch {
 		// Do search with Repo type only
 		repos, err = githubRepoSearch(input.Query)
+	} else if input.AllRepos {
+		// Do search with Repo type only
+		repos, err = githubAllRepoSearch(input.Query)
 	} else {
 		// Do code search
 		if input.RepoProvider == "github" {
@@ -236,6 +240,61 @@ func githubRepoSearch(query string) ([]Repo, error) {
 		})
 	}
 
+	return repos, nil
+}
+
+func githubAllRepoSearch(query string) ([]Repo, error) {
+	ctx := context.Background()
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
+	)
+	tc := oauth2.NewClient(ctx, ts)
+
+	client := github.NewClient(tc)
+
+	allRepos := map[string]*github.Repository{}
+	opts := &github.RepositoryListByOrgOptions{}
+	numProcessedResults := 0
+
+	for {
+		result, resp, err := client.Repositories.ListByOrg(context.Background(), query, opts)
+		if abuseErr, ok := err.(*github.AbuseRateLimitError); ok {
+			var waitTime time.Duration
+			if abuseErr.RetryAfter != nil {
+				waitTime = *abuseErr.RetryAfter
+			} else {
+				waitTime = 10 * time.Second
+			}
+			log.Printf("Triggered Github abuse detection - waiting %v then trying again.\n", waitTime)
+			time.Sleep(waitTime)
+			continue
+		} else if err != nil {
+			return []Repo{}, err
+		}
+
+		if err != nil {
+			return []Repo{}, err
+		}
+
+		for _, repoResult := range result {
+			numProcessedResults = numProcessedResults + 1
+			allRepos[*repoResult.Name] = repoResult
+		}
+
+		if resp.NextPage == 0 {
+			break
+		}
+		opts.Page = resp.NextPage
+	}
+	repos := []Repo{}
+	for _, r := range allRepos {
+		repos = append(repos, Repo{
+			Name:     r.GetName(),
+			Owner:    r.Owner.GetLogin(),
+			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			Provider: "github",
+		})
+	}
 	return repos, nil
 }
 
