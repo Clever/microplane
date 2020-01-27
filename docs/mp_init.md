@@ -34,7 +34,15 @@ See https://help.github.com/articles/searching-code/ for more details about the 
 
 - Search target repos based on a Github Repo Search query.
 
-To init all repos belonging to a specific org use --all-repos flag
+To init all repos belonging to a specific org use --all-repos flag. Caution: you should run this command first to update all your local github repos.
+
+- cd into folder with all repos belonging to an org
+
+- for all repositories pull remote changes from github
+
+$ find . -type d -depth 1 -exec git --git-dir={}/.git --work-tree=$PWD/{} pull origin master \;
+
+After that you can run the following command.
 
 For example:
 
