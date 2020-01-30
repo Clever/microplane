@@ -34,11 +34,17 @@ See https://help.github.com/articles/searching-code/ for more details about the 
 
 - Search target repos based on a Github Repo Search query.
 
-For exampel:
+To init all repos belonging to a specific org use --all-repos flag.
 
-$mp init "org:Clever" --repo-search
+For example:
 
-would target all Clever repos
+$ mp init "clever" --all-repos
+
+would target all repos in clever org.
+
+To init repos with additional parameters use --repo-search flag
+
+For example:
 
 $ mp init "org:Clever language:Go" --repo-search
 

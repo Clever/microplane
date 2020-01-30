@@ -12,6 +12,7 @@ import (
 var repoProviderFlag string
 var initFlagReposFile string
 var repoSearch bool
+var allRepos bool
 
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
@@ -47,11 +48,15 @@ See https://help.github.com/articles/searching-code/ for more details about the 
 
 - Search target repos based on a Github Repo Search query.
 
+To init all repos belonging to a specific org use --all-repos flag.
+
+$ mp init "clever" --all-repos
+
+would target all repos in clever org.
+
+To init repos with additional parameters use --repo-search flag
+
 For example:
-
-$ mp init "org:Clever" --repo-search
-
-would target all Clever repos in clever org.
 
 $ mp init "org:Clever language:Go" --repo-search
 
@@ -90,6 +95,7 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 		}
 
 		output, err := initialize.Initialize(initialize.Input{
+			AllRepos:      allRepos,
 			Query:         query,
 			WorkDir:       workDir,
 			Version:       cliVersion,
