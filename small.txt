@@ -1,0 +1,7 @@
+Clever/instant-login-api
+Clever/lockbox-connectors
+Clever/family-portal
+Clever/sd2
+Clever/apps-dashboard
+Clever/sis-api
+Clever/events-api
