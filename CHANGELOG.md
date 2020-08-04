@@ -1,5 +1,9 @@
 # changelog
 
+2020-08-04 - v0.0.0.22
+
+- Fixes --body-file flag usage [#60](https://github.com/Clever/microplane/pull/60)
+
 2019-01-13 - v0.0.0.21
 
 - Adding an --all-repos flag to init all repos under a specific org
