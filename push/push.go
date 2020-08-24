@@ -41,6 +41,8 @@ type Input struct {
 	RepoOwner string
 	// BranchName is the branch name in Git
 	BranchName string
+	// Labels
+	Labels []string
 }
 
 // Output from Push()
@@ -132,6 +134,18 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 			return Output{Success: false}, err
 		}
 	}
+
+	if pr.Labels == nil || len(input.Labels) > 0 {
+		<-repoLimiter.C
+		// TODO: Compare current labels
+		_, _, err := client.Issues.AddLabelsToIssue(ctx, input.RepoOwner, input.RepoName, *pr.Number, input.Labels)
+		if err != nil {
+			return Output{Success: false}, err
+		}
+	}
+
+
+
 
 	<-repoLimiter.C
 	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
