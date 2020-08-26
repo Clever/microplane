@@ -19,12 +19,14 @@ import (
 var pushFlagAssignee string
 var pushFlagThrottle string
 var pushFlagBodyFile string
+var pushFlagLabels []string
 
 // rate limits the # of git pushes. used to prevent load on CI system
 var pushThrottle *time.Ticker
 
 var prAssignee string
 var prBody string
+var prLabels []string
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
@@ -63,6 +65,14 @@ var pushCmd = &cobra.Command{
 				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
 			}
 			pushThrottle = time.NewTicker(dur)
+		}
+
+		labels, err := cmd.Flags().GetStringSlice("labels")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if len(labels) > 0 {
+			prLabels = labels
 		}
 
 		repos, err := whichRepos(cmd)
@@ -120,6 +130,7 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 		PRAssignee:    prAssignee,
 		BranchName:    planOutput.BranchName,
 		RepoOwner:     r.Owner,
+		Labels:        prLabels,
 	}
 	var output push.Output
 	var err error

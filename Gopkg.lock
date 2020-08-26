@@ -42,12 +42,12 @@
   revision = "130e6b02ab059e7b717a096f397c5b60111cae74"
 
 [[projects]]
-  branch = "master"
-  digest = "1:e9d85290d89e83245e1410cb3ed32b39c70ca7aa80ec3b1e92bf0a0eab859426"
+  digest = "1:b453d4e75b817dda55b21af53a750bc15b7fece8ecfc77cd6a279cdc94223b09"
   name = "github.com/google/go-github"
   packages = ["github"]
   pruneopts = ""
-  revision = "922ceac0585d40f97d283d921f872fc50480e06e"
+  revision = "e881974953e6ab6d1a6a1610e98ed6401a3aa1ba"
+  version = "v32.1.0"
 
 [[projects]]
   branch = "master"
@@ -150,6 +150,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:678eb8275bb8e3394737d136f55da106956c699fb4ccc3e72aa115123cd28d0d"
+  name = "golang.org/x/crypto"
+  packages = [
+    "cast5",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
+  ]
+  pruneopts = ""
+  revision = "5c72a883971a4325f8c62bf07b6d38c20ea47a6a"
+
+[[projects]]
+  branch = "master"
   digest = "1:6566ccb4bc1f6ba66b8c478057c514f51de857230b71c8b333b0d6d4983aea69"
   name = "golang.org/x/net"
   packages = [
@@ -214,32 +230,16 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/cpuguy83/go-md2man/md2man",
-    "github.com/davecgh/go-spew/spew",
     "github.com/facebookgo/errgroup",
     "github.com/fatih/color",
-    "github.com/golang/protobuf/proto",
     "github.com/google/go-github/github",
-    "github.com/google/go-querystring/query",
-    "github.com/inconshreveable/mousetrap",
-    "github.com/juju/errors",
-    "github.com/mattn/go-colorable",
-    "github.com/mattn/go-isatty",
     "github.com/nathanleiby/diffparser",
-    "github.com/pmezard/go-difflib/difflib",
-    "github.com/russross/blackfriday",
     "github.com/spf13/cobra",
     "github.com/spf13/cobra/doc",
-    "github.com/spf13/pflag",
     "github.com/stretchr/testify/assert",
     "github.com/xanzy/go-gitlab",
-    "golang.org/x/net/context",
-    "golang.org/x/net/context/ctxhttp",
     "golang.org/x/oauth2",
     "golang.org/x/sync/semaphore",
-    "golang.org/x/sys/unix",
-    "google.golang.org/appengine/urlfetch",
-    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

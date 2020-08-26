@@ -205,7 +205,7 @@ func githubRepoSearch(query string) ([]Repo, error) {
 
 		for _, repoResult := range result.Repositories {
 			numProcessedResults = numProcessedResults + 1
-			allRepos[*repoResult.Name] = &repoResult
+			allRepos[*repoResult.Name] = repoResult
 		}
 
 		incompleteResults := result.GetIncompleteResults()

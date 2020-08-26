@@ -54,6 +54,7 @@ func init() {
 	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "30s", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
 	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
+	pushCmd.Flags().StringSliceVarP(&pushFlagLabels, "labels", "l", nil, "labels to attach to PR")
 
 	rootCmd.AddCommand(statusCmd)
 
