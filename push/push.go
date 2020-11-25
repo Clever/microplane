@@ -105,7 +105,11 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 
 	// Open a pull request, if one doesn't exist already
 	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
-	base := "master"
+	repository, _, err := client.Repositories.Get(ctx, input.RepoOwner, input.RepoName)
+	if err != nil {
+		return Output{Success: false}, err
+	}
+	base := *repository.DefaultBranch
 
 	// Determine PR title and body
 	// Title is first line of commit message.
@@ -143,9 +147,6 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 			return Output{Success: false}, err
 		}
 	}
-
-
-
 
 	<-repoLimiter.C
 	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
