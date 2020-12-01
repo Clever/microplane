@@ -2,19 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/Clever/microplane"
-  packages = [
-    "clone",
-    "cmd",
-    "initialize",
-    "merge",
-    "plan",
-    "push"
-  ]
-  revision = "b065640a4f257886e3a7beb832e8140dbd3cd8eb"
-  version = "v0.0.23"
-
-[[projects]]
   name = "github.com/cpuguy83/go-md2man"
   packages = ["md2man"]
   revision = "1d903dcb749992f3741d744c0f8376b4bd7eb3e1"
@@ -192,6 +179,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d1c09d0f69659e74e5a2cce052431357a3daa963dfec989a5f2b2824d5126c41"
+  inputs-digest = "37f0be4cac1598bf70f151f152d6f56d87cacb0e2a76ee2b0c3ffbc190f5816f"
   solver-name = "gps-cdcl"
   solver-version = 1
