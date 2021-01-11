@@ -24,6 +24,7 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
   -b, --branch string    Git branch to commit to
   -h, --help             help for plan
   -m, --message string   Commit message
+  -p, --parallelism int  Parallelism limit (default 10)
 ```
 
 ### Options inherited from parent commands

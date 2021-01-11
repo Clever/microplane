@@ -28,11 +28,15 @@ func writeJSON(obj interface{}, path string) error {
 	return ioutil.WriteFile(path, b, 0644)
 }
 
-// parallelize take a list of repos and applies a function (clone, plan, ...) to them
 func parallelize(repos []initialize.Repo, f func(initialize.Repo, context.Context) error) error {
+    return parallelizeLimited(repos, f, 10)
+}
+
+// parallelize take a list of repos and applies a function (clone, plan, ...) to them
+func parallelizeLimited(repos []initialize.Repo, f func(initialize.Repo, context.Context) error, parallelismLimit int64) error {
 	ctx := context.Background()
 	var eg errgroup.Group
-	parallelLimit := semaphore.NewWeighted(10)
+	parallelLimit := semaphore.NewWeighted(parallelismLimit)
 	for _, r := range repos {
 		eg.Add(1)
 		go func(repo initialize.Repo) {

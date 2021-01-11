@@ -14,6 +14,7 @@ import (
 
 var workDir string
 var cliVersion string
+var defaultParallelism int64 = 10
 
 // Github's rate limit for authenticated requests is 5000 QPH = 83.3 QPM = 1.38 QPS = 720ms/query
 // We also use a global limiter to prevent concurrent requests, which trigger Github's abuse detection
@@ -49,6 +50,7 @@ func init() {
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
+	planCmd.Flags().Int64VarP(&planFlagParallelism, "parallelism", "p", defaultParallelism, "Parallelism limit")
 
 	rootCmd.AddCommand(pushCmd)
 	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "30s", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
