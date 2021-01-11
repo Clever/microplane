@@ -29,7 +29,7 @@ func writeJSON(obj interface{}, path string) error {
 }
 
 func parallelize(repos []initialize.Repo, f func(initialize.Repo, context.Context) error) error {
-    return parallelizeLimited(repos, f, 10)
+	return parallelizeLimited(repos, f, 10)
 }
 
 // parallelize take a list of repos and applies a function (clone, plan, ...) to them

@@ -37,7 +37,7 @@ var planCmd = &cobra.Command{
 mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/path/to/script`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
-        var parallelismLimit int64
+		var parallelismLimit int64
 
 		changeCmd = args[0]
 		if len(args) > 1 {
@@ -66,8 +66,8 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 		}
 		isSingleRepo = len(repos) == 1
 
-        parallelismLimit, err = cmd.Flags().GetInt64("parallelism")
-	    log.Printf("planning %d repos with parallelism limit [%d]", len(repos), parallelismLimit)
+		parallelismLimit, err = cmd.Flags().GetInt64("parallelism")
+		log.Printf("planning %d repos with parallelism limit [%d]", len(repos), parallelismLimit)
 		err = parallelizeLimited(repos, planOneRepo, parallelismLimit)
 		if err != nil {
 			log.Fatalf("%d errors:\n %+v\n", strings.Count(err.Error(), " | ")+1, err)
