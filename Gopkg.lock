@@ -188,11 +188,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:07ac0df32466f60b28acfc5467709d2642108407a0cbf63b1f0677486e243cd5"
+  digest = "1:23b5a4f402f3629fb94197b313a95e90f091fb8caeec91d7eb380d1da3fd702a"
   name = "golang.org/x/sync"
   packages = ["semaphore"]
   pruneopts = ""
-  revision = "09787c993a3ab68e3d1f5c9b2394ab9433f391be"
+  revision = "036812b2e83c0ddf193dd5a34e034151da389d09"
 
 [[projects]]
   branch = "master"
