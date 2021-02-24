@@ -28,5 +28,5 @@ release:
 	@GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w -X main.version=$(VERSION)" \
 		-o="$@/$(EXECUTABLE)-$(VERSION)-darwin-amd64"
 
-install_deps: golang-dep-vendor-deps
-	$(call golang-dep-vendor)
+install_deps:
+	go mod vendor
