@@ -9,11 +9,11 @@ _"the lemon is Git{Hub,Lab}"_
 
 ## Setup
 
-### Download
+Here are several ways to install microplane:
 
-You can download a pre-built version of Microplane from the [Github releases](https://github.com/Clever/microplane/releases).
-
-Alternately, you can download via `go get github.com/clever/microplane/cmd`. In this case the binary will be installed to `$GOPATH/bin/microplane`
+- *Pre-built release* - You can download a pre-built version of Microplane from the [Github releases](https://github.com/Clever/microplane/releases).
+- *Compile it yourself*  - Run `go get github.com/clever/microplane/cmd`. In this case the binary will be installed to `$GOPATH/bin/microplane`. Alternately, you can follow the steps under "Development", below.
+- *Homebrew* - `brew install microplane`. The latest homebrew formula is [here](https://github.com/Homebrew/homebrew-core/blob/master/Formula/microplane.rb)
 
 ## Usage
 
@@ -44,9 +44,21 @@ For an in-depth example, check out the [introductory blogpost](https://medium.co
 
 ### Build Locally
 
-Microplane is a Golang project. It uses [`dep`](https://github.com/golang/dep) for vendoring.
+Microplane is a Golang project.
 
-First, clone the repo into your `GOPATH`. Next, run `make install_deps` (this calls `dep`). To build, run `make build`. You should now have a working build of Microplane in `./bin/mp`.
+First, clone the repo.
+
+To install dependencies run
+```
+make install_deps
+```
+
+To build, run
+```
+make build
+```
+
+You should now have a working build of Microplane in `./bin/mp`.
 
 ### Design
 
