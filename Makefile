@@ -7,10 +7,6 @@ VERSION := $(shell head -n 1 VERSION)
 EXECUTABLE := mp
 $(eval $(call golang-version-check,1.15))
 
-$(GOPATH)/bin/dep:
-	@go get github.com/golang/dep
-	@go install github.com/golang/dep/...
-
 all: test build release
 
 test: $(PKGS)
@@ -29,4 +25,6 @@ release:
 		-o="$@/$(EXECUTABLE)-$(VERSION)-darwin-amd64"
 
 install_deps:
+	go get github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
+	go get golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
 	go mod vendor
