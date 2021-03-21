@@ -76,7 +76,7 @@ mp init [query] [flags]
   -f, --file string           get repos from a file instead of searching
   -h, --help                  help for init
       --provider string       'github' or 'gitlab' (default "github")
-      --provider-url string   custom URL for enterprise setups (default "https://api.github.com/api/v3/")
+      --provider-url string   custom URL for enterprise setups
       --repo-search           get repos from a github repo search
 ```
 

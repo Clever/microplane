@@ -125,5 +125,5 @@ func init() {
 	initCmd.Flags().BoolVar(&initRepoSearch, "repo-search", false, "get repos from a github repo search")
 	initCmd.Flags().BoolVar(&initAllrepos, "all-repos", false, "get all repos for a given org")
 	initCmd.Flags().StringVar(&initProvider, "provider", "github", "'github' or 'gitlab'")
-	initCmd.Flags().StringVar(&initProviderURL, "provider-url", "https://api.github.com/api/v3/", "custom URL for enterprise setups")
+	initCmd.Flags().StringVar(&initProviderURL, "provider-url", "", "custom URL for enterprise setups")
 }
