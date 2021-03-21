@@ -6,7 +6,31 @@
 #
 # Please read carefully and use at your own risk.
 
-if [ "$1" == "nuke" ]; then
+set -e
+
+####################
+# Script setup
+####################
+provider=$1
+nuke=$2
+
+usage() {
+  echo "usage: ./integration_test.sh <github|gitlab> {nuke}"
+}
+
+# specify provider
+if [ "$provider" != "github" ] && [ "$provider" != "gitlab" ]; then
+  usage
+  exit 1
+fi
+
+owner="microplane-test"
+if [ "$provider" == "gitlab" ]; then
+  owner="microplane-gitlab"
+fi
+
+# nuke is optional
+if [ "$nuke" == "nuke" ]; then
   echo "nuking ./mp"
   rm -rf ./mp
 fi
@@ -16,20 +40,22 @@ if [ -d "mp" ]; then
     exit 1
 fi
 
-tmpfile=$(mktemp /tmp/abc-script.XXXXXX)
-echo "microplane-test/1" >> $tmpfile
-echo "microplane-test/2" >> $tmpfile
+####################
+# Run microplane e2e
+####################
 
 echo "[Init]"
-./bin/mp init -f $tmpfile
+tmpfile=$(mktemp /tmp/mp-integration-test.XXXXXX)
+echo "$owner/1" >> $tmpfile
+echo "$owner/2" >> $tmpfile
 
+./bin/mp init --provider $provider -f $tmpfile
 rm $tmpfile
 
 echo "[Clone]"
 ./bin/mp clone
 ts=`date +"%T"`
 
-echo "TS = $ts"
 
 echo "[Plan]"
 ./bin/mp plan -b plan -m "plan" -- sh -c "echo $ts >> README.md"
