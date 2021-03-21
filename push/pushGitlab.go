@@ -65,10 +65,17 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	if err != nil {
 		return Output{Success: false}, err
 	}
+
 	pipelineStatus, err := GetPipelineStatus(client, input.Repo.Owner, input.Repo.Name, &gitlab.ListProjectPipelinesOptions{SHA: &pr.SHA})
 	if err != nil {
 		return Output{Success: false}, err
 	}
+
+	buildURL := ""
+	if pr.Pipeline != nil {
+		buildURL = pr.Pipeline.Ref
+	}
+
 	return Output{
 		Success:                   true,
 		CommitSHA:                 pr.SHA,
@@ -76,7 +83,7 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		PullRequestURL:            pr.WebURL,
 		PullRequestCombinedStatus: pipelineStatus,
 		PullRequestAssignee:       input.PRAssignee,
-		CircleCIBuildURL:          pr.Pipeline.Ref,
+		CircleCIBuildURL:          buildURL,
 	}, nil
 }
 
