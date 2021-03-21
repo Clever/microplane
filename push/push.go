@@ -5,12 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
-
-	"golang.org/x/oauth2"
 
 	"github.com/Clever/microplane/lib"
 	"github.com/google/go-github/github"
@@ -78,11 +75,11 @@ func (o Output) String() string {
 // Push pushes the commit to Github and opens a pull request
 func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
 	// Create Github Client
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
+	p := lib.NewProviderFromConfig(input.Repo.ProviderConfig)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return Output{}, err
+	}
 
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
