@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/Clever/microplane/clone"
-	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/spf13/cobra"
 )
 
@@ -28,7 +28,7 @@ var cloneCmd = &cobra.Command{
 	},
 }
 
-func cloneOneRepo(r initialize.Repo, ctx context.Context) error {
+func cloneOneRepo(r lib.Repo, ctx context.Context) error {
 	log.Printf("cloning: %s/%s", r.Owner, r.Name)
 
 	// Prepare workdir for current step's output

@@ -4,16 +4,23 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
 
+	"github.com/Clever/microplane/lib"
 	"github.com/xanzy/go-gitlab"
 )
 
 // GitlabPush pushes the commit to Gitlab and opens a pull request
 func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
+	// Create client
+	p := lib.NewProviderFromConfig(input.Repo.ProviderConfig)
+	client, err := p.GitlabClient()
+	if err != nil {
+		return Output{}, err
+	}
+
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
 	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
@@ -30,12 +37,6 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	gitPush.Dir = input.PlanDir
 	if output, err := gitPush.CombinedOutput(); err != nil {
 		return Output{Success: false}, errors.New(string(output))
-	}
-
-	// Create Gitlab Client
-	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
-	if os.Getenv("GITLAB_URL") != "" {
-		client.SetBaseURL(os.Getenv("GITLAB_URL"))
 	}
 
 	// Open a pull request, if one doesn't exist already
@@ -55,7 +56,7 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		}
 	}
 
-	pr, err := findOrCreateGitlabMR(ctx, client, input.RepoOwner, input.RepoName, &gitlab.CreateMergeRequestOptions{
+	pr, err := findOrCreateGitlabMR(ctx, client, input.Repo.Owner, input.Repo.Name, &gitlab.CreateMergeRequestOptions{
 		Title:        &title,
 		Description:  &body,
 		SourceBranch: &head,
@@ -64,7 +65,7 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	if err != nil {
 		return Output{Success: false}, err
 	}
-	pipelineStatus, err := GetPipelineStatus(client, input.RepoOwner, input.RepoName, &gitlab.ListProjectPipelinesOptions{SHA: &pr.SHA})
+	pipelineStatus, err := GetPipelineStatus(client, input.Repo.Owner, input.Repo.Name, &gitlab.ListProjectPipelinesOptions{SHA: &pr.SHA})
 	if err != nil {
 		return Output{Success: false}, err
 	}

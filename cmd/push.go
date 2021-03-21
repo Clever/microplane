@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
@@ -93,7 +93,7 @@ var pushCmd = &cobra.Command{
 	},
 }
 
-func pushOneRepo(r initialize.Repo, ctx context.Context) error {
+func pushOneRepo(r lib.Repo, ctx context.Context) error {
 	log.Printf("pushing: %s/%s", r.Owner, r.Name)
 
 	// Exit early if already merged
@@ -122,21 +122,20 @@ func pushOneRepo(r initialize.Repo, ctx context.Context) error {
 
 	// Execute
 	input := push.Input{
-		RepoName:      r.Name,
+		Repo:          r,
 		PlanDir:       planOutput.PlanDir,
 		WorkDir:       pushWorkDir,
 		CommitMessage: planOutput.CommitMessage,
 		PRBody:        prBody,
 		PRAssignee:    prAssignee,
 		BranchName:    planOutput.BranchName,
-		RepoOwner:     r.Owner,
 		Labels:        prLabels,
 	}
 	var output push.Output
 	var err error
-	if r.Provider == "gitlab" {
+	if r.IsGitlab() {
 		output, err = push.GitlabPush(ctx, input, repoLimiter, pushThrottle)
-	} else if r.Provider == "github" {
+	} else if r.IsGithub() {
 		output, err = push.GithubPush(ctx, input, repoLimiter, pushThrottle)
 	}
 	if err != nil {

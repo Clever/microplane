@@ -3,19 +3,16 @@ package merge
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/Clever/microplane/lib"
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
 // Input to Push()
 type Input struct {
-	// Org on Github, e.g. "Clever"
-	Org string
-	// Repo is the name of the repo on Github, e.g. "microplane"
-	Repo string
+	// Repo is the git Repo
+	Repo lib.Repo
 	// PRNumber of Github, e.g. for https://github.com/Clever/microplane/pull/123, the PRNumber is 123
 	PRNumber int
 	// CommitSHA for the commit which opened the above PR. Used to look up Commit status.
@@ -45,17 +42,17 @@ type Error struct {
 // - mergeLimiter rate limits # of merges, to prevent load when submitting builds to CI system
 func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
 	// Create Github Client
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
+	p := lib.NewProviderFromConfig(input.Repo.ProviderConfig)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return Output{}, err
+	}
 
 	// OK to merge?
 
 	// (1) Check if the PR is mergeable
 	<-repoLimiter.C
-	pr, _, err := client.PullRequests.Get(ctx, input.Org, input.Repo, input.PRNumber)
+	pr, _, err := client.PullRequests.Get(ctx, input.Repo.Owner, input.Repo.Name, input.PRNumber)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -71,7 +68,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 
 	// (2) Check commit status
 	<-repoLimiter.C
-	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Org, input.Repo, input.CommitSHA, &github.ListOptions{})
+	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Repo.Owner, input.Repo.Name, input.CommitSHA, &github.ListOptions{})
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -85,7 +82,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 
 	// (3) check if PR has been approved by a reviewer
 	<-repoLimiter.C
-	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Org, input.Repo, input.PRNumber, &github.ListOptions{})
+	reviews, _, err := client.PullRequests.ListReviews(ctx, input.Repo.Owner, input.Repo.Name, input.PRNumber, &github.ListOptions{})
 	if input.RequireReviewApproval {
 		if len(reviews) == 0 {
 			return Output{Success: false}, fmt.Errorf("PR awaiting review. Use --ignore-review-approval to override this check.")
@@ -102,7 +99,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	commitMsg := ""
 	<-mergeLimiter.C
 	<-repoLimiter.C
-	result, _, err := client.PullRequests.Merge(ctx, input.Org, input.Repo, input.PRNumber, commitMsg, options)
+	result, _, err := client.PullRequests.Merge(ctx, input.Repo.Owner, input.Repo.Name, input.PRNumber, commitMsg, options)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -113,7 +110,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 
 	// Delete the branch
 	<-repoLimiter.C
-	_, err = client.Git.DeleteRef(ctx, input.Org, input.Repo, "heads/"+*pr.Head.Ref)
+	_, err = client.Git.DeleteRef(ctx, input.Repo.Owner, input.Repo.Name, "heads/"+*pr.Head.Ref)
 	if err != nil {
 		return Output{Success: false}, err
 	}

@@ -9,11 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var repoProviderFlag string
-var initFlagReposFile string
-var repoSearch bool
-var allRepos bool
-
 var initCmd = &cobra.Command{
 	Use:   "init [query]",
 	Short: "Initialize a microplane workflow",
@@ -95,13 +90,14 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 		}
 
 		output, err := initialize.Initialize(initialize.Input{
-			AllRepos:      allRepos,
+			AllRepos:      initAllrepos,
 			Query:         query,
 			WorkDir:       workDir,
 			Version:       cliVersion,
-			RepoProvider:  repoProviderFlag,
+			Provider:      initProvider,
+			ProviderURL:   initProviderURL,
 			ReposFromFile: initFlagReposFile,
-			RepoSearch:    repoSearch,
+			RepoSearch:    initRepoSearch,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -116,4 +112,18 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 			fmt.Println(repo.Name)
 		}
 	},
+}
+
+var initFlagReposFile string
+var initRepoSearch bool
+var initAllrepos bool
+var initProvider string
+var initProviderURL string
+
+func init() {
+	initCmd.Flags().StringVarP(&initFlagReposFile, "file", "f", "", "get repos from a file instead of searching")
+	initCmd.Flags().BoolVar(&initRepoSearch, "repo-search", false, "get repos from a github repo search")
+	initCmd.Flags().BoolVar(&initAllrepos, "all-repos", false, "get all repos for a given org")
+	initCmd.Flags().StringVar(&initProvider, "provider", "github", "'github' or 'gitlab'")
+	initCmd.Flags().StringVar(&initProviderURL, "provider-url", "https://api.github.com/api/v3/", "custom URL for enterprise setups")
 }
