@@ -48,8 +48,10 @@ func (p *Provider) GithubClient(ctx context.Context) (*github.Client, error) {
 	// create the client
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
+	if p.IsEnterprise() {
+		return github.NewEnterpriseClient(p.BackendURL, p.BackendURL, tc)
+	}
 	client := github.NewClient(tc)
-
 	return client, nil
 }
 
