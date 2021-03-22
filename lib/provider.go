@@ -20,10 +20,6 @@ func (pc ProviderConfig) IsEnterprise() bool {
 	return pc.BackendURL != ""
 }
 
-func (pc ProviderConfig) CloneURLPrefix() string {
-	return fmt.Sprintf("git@%s.com", pc.Backend)
-}
-
 // Provider is an abstraction over a Git provider (Github, Gitlab, etc)
 type Provider struct {
 	ProviderConfig

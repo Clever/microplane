@@ -39,9 +39,14 @@ func cloneOneRepo(r lib.Repo, ctx context.Context) error {
 	}
 
 	// Execute
+	cloneURL, err := r.ComputedCloneURL()
+	if err != nil {
+		return err
+	}
+
 	input := clone.Input{
 		WorkDir: cloneWorkDir,
-		GitURL:  r.CloneURL,
+		GitURL:  cloneURL,
 	}
 	output, err := clone.Clone(ctx, input)
 	if err != nil {

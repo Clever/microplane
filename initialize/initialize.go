@@ -116,7 +116,6 @@ func reposFromFile(p *lib.Provider, file string) ([]lib.Repo, error) {
 		repos = append(repos, lib.Repo{
 			Owner:          parts[0],
 			Name:           parts[1],
-			CloneURL:       fmt.Sprintf("%s:%s", p.CloneURLPrefix(), item),
 			ProviderConfig: p.ProviderConfig,
 		})
 	}
@@ -267,7 +266,6 @@ func getFormattedRepos(p *lib.Provider, allRepos map[string]*github.Repository) 
 		formattedRepos = append(formattedRepos, lib.Repo{
 			Name:           r.GetName(),
 			Owner:          r.Owner.GetLogin(),
-			CloneURL:       fmt.Sprintf("git@github.com:%s", r.GetFullName()),
 			ProviderConfig: p.ProviderConfig,
 		})
 	}
