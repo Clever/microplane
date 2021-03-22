@@ -5,13 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	"golang.org/x/oauth2"
-
+	"github.com/Clever/microplane/lib"
 	"github.com/google/go-github/github"
 )
 
@@ -23,8 +21,8 @@ type Command struct {
 
 // Input to Push()
 type Input struct {
-	// RepoName is the name of the repo, without the owner.
-	RepoName string
+	// Repo is the git repo
+	Repo lib.Repo
 	// PlanDir is where the git repo that has been modified lives.
 	PlanDir string
 	// WorkDir is where the work associated with the Push operation happens
@@ -37,8 +35,6 @@ type Input struct {
 	PRBody string
 	// PRAssignee is the user who will be assigned the PR
 	PRAssignee string
-	// RepoOwner is the name of the user who owns the Github repo
-	RepoOwner string
 	// BranchName is the branch name in Git
 	BranchName string
 	// Labels
@@ -78,6 +74,13 @@ func (o Output) String() string {
 
 // Push pushes the commit to Github and opens a pull request
 func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, pushLimiter *time.Ticker) (Output, error) {
+	// Create Github Client
+	p := lib.NewProviderFromConfig(input.Repo.ProviderConfig)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return Output{}, err
+	}
+
 	// Get the commit SHA from the last commit
 	cmd := Command{Path: "git", Args: []string{"log", "-1", "--pretty=format:%H"}}
 	gitLog := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
@@ -96,16 +99,9 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		return Output{Success: false}, errors.New(string(output))
 	}
 
-	// Create Github Client
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	client := github.NewClient(tc)
-
 	// Open a pull request, if one doesn't exist already
-	head := fmt.Sprintf("%s:%s", input.RepoOwner, input.BranchName)
-	repository, _, err := client.Repositories.Get(ctx, input.RepoOwner, input.RepoName)
+	head := fmt.Sprintf("%s:%s", input.Repo.Owner, input.BranchName)
+	repository, _, err := client.Repositories.Get(ctx, input.Repo.Owner, input.Repo.Name)
 	if err != nil {
 		return Output{Success: false}, err
 	}
@@ -121,7 +117,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		title = splitMsg[0]
 		body = splitMsg[1] + "\n" + input.PRBody
 	}
-	pr, err := findOrCreatePR(ctx, client, input.RepoOwner, input.RepoName, &github.NewPullRequest{
+	pr, err := findOrCreatePR(ctx, client, input.Repo.Owner, input.Repo.Name, &github.NewPullRequest{
 		Title: &title,
 		Body:  &body,
 		Head:  &head,
@@ -133,7 +129,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 
 	if pr.Assignee == nil || pr.Assignee.Login == nil || *pr.Assignee.Login != input.PRAssignee {
 		<-repoLimiter.C
-		_, _, err := client.Issues.AddAssignees(ctx, input.RepoOwner, input.RepoName, *pr.Number, []string{input.PRAssignee})
+		_, _, err := client.Issues.AddAssignees(ctx, input.Repo.Owner, input.Repo.Name, *pr.Number, []string{input.PRAssignee})
 		if err != nil {
 			return Output{Success: false}, err
 		}
@@ -142,14 +138,14 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	if pr.Labels == nil || len(input.Labels) > 0 {
 		<-repoLimiter.C
 		// TODO: Compare current labels
-		_, _, err := client.Issues.AddLabelsToIssue(ctx, input.RepoOwner, input.RepoName, *pr.Number, input.Labels)
+		_, _, err := client.Issues.AddLabelsToIssue(ctx, input.Repo.Owner, input.Repo.Name, *pr.Number, input.Labels)
 		if err != nil {
 			return Output{Success: false}, err
 		}
 	}
 
 	<-repoLimiter.C
-	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.RepoOwner, input.RepoName, *pr.Head.SHA, nil)
+	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.Repo.Owner, input.Repo.Name, *pr.Head.SHA, nil)
 	if err != nil {
 		return Output{Success: false}, err
 	}

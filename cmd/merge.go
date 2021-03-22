@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/push"
 	"github.com/spf13/cobra"
@@ -53,7 +53,7 @@ var mergeCmd = &cobra.Command{
 	},
 }
 
-func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
+func mergeOneRepo(r lib.Repo, ctx context.Context) error {
 	log.Printf("%s/%s - merging...", r.Owner, r.Name)
 
 	// Exit early if already merged
@@ -87,17 +87,16 @@ func mergeOneRepo(r initialize.Repo, ctx context.Context) error {
 
 	// Execute
 	input := merge.Input{
-		Org:                   r.Owner,
-		Repo:                  r.Name,
+		Repo:                  r,
 		PRNumber:              prNumber,
 		CommitSHA:             pushOutput.CommitSHA,
 		RequireReviewApproval: !mergeFlagIgnoreReviewApproval,
 		RequireBuildSuccess:   !mergeFlagIgnoreBuildStatus,
 	}
 	var output merge.Output
-	if r.Provider == "gitlab" {
+	if r.IsGitlab() {
 		output, err = merge.GitlabMerge(ctx, input, repoLimiter, mergeThrottle)
-	} else if r.Provider == "github" {
+	} else if r.IsGithub() {
 		output, err = merge.GitHubMerge(ctx, input, repoLimiter, mergeThrottle)
 	} else {
 		log.Fatal("Provider must be github or gitlab")

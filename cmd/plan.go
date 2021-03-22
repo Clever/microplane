@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Clever/microplane/clone"
-	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/spf13/cobra"
@@ -75,7 +75,7 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 	},
 }
 
-func planOneRepo(r initialize.Repo, ctx context.Context) error {
+func planOneRepo(r lib.Repo, ctx context.Context) error {
 	log.Printf("planning: %s/%s", r.Owner, r.Name)
 
 	// Get previous step's output

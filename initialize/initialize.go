@@ -5,23 +5,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/Clever/microplane/lib"
 	"github.com/google/go-github/github"
 	gitlab "github.com/xanzy/go-gitlab"
-	"golang.org/x/oauth2"
 )
-
-// Repo describes a GithubRepository
-type Repo struct {
-	Name     string
-	Owner    string
-	CloneURL string
-	Provider string
-}
 
 // Input for Initialize
 type Input struct {
@@ -29,7 +20,8 @@ type Input struct {
 	WorkDir       string
 	Query         string
 	Version       string
-	RepoProvider  string
+	Provider      string
+	ProviderURL   string
 	ReposFromFile string
 	RepoSearch    bool
 }
@@ -37,35 +29,42 @@ type Input struct {
 // Output for Initialize
 type Output struct {
 	Version string
-	Repos   []Repo
+	Repos   []lib.Repo
 }
 
 // ByName allows sorting repos by name
-type ByName []Repo
+type ByName []lib.Repo
 
 func (a ByName) Len() int           { return len(a) }
 func (a ByName) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByName) Less(i, j int) bool { return a[i].Name < a[j].Name }
 
-// Initialize searches Github for matching repos
+// Initialize searches Provider for matching repos
 func Initialize(input Input) (Output, error) {
-	var repos []Repo
+	p := lib.NewProviderFromConfig(lib.ProviderConfig{
+		Backend:    input.Provider,
+		BackendURL: input.ProviderURL,
+	})
+
+	var repos []lib.Repo
 	var err error
 	if input.ReposFromFile != "" {
 		// Read repos from file
-		repos, err = reposFromFile(input)
+		repos, err = reposFromFile(p, input.ReposFromFile)
 	} else if input.RepoSearch {
 		// Do search with Repo type only
-		repos, err = githubRepoSearch(input.Query)
+		repos, err = githubRepoSearch(p, input.Query)
 	} else if input.AllRepos {
 		// Do search with Repo type only
-		repos, err = githubAllRepoSearch(input.Query)
+		repos, err = githubAllRepoSearch(p, input.Query)
 	} else {
 		// Do code search
-		if input.RepoProvider == "github" {
-			repos, err = githubSearch(input.Query)
-		} else if input.RepoProvider == "gitlab" {
-			repos, err = gitlabSearch(input.Query)
+		if p.Backend == "github" {
+			repos, err = githubSearch(p, input.Query)
+		} else if p.Backend == "gitlab" {
+			repos, err = gitlabSearch(p, input.Query)
+		} else {
+			return Output{}, fmt.Errorf("unsupported provider: %s", p.Backend)
 		}
 	}
 
@@ -81,9 +80,9 @@ func Initialize(input Input) (Output, error) {
 	}, nil
 }
 
-func dedupe(repos []Repo) []Repo {
-	out := []Repo{}
-	seen := map[Repo]struct{}{}
+func dedupe(repos []lib.Repo) []lib.Repo {
+	out := []lib.Repo{}
+	seen := map[lib.Repo]struct{}{}
 
 	for _, r := range repos {
 		_, isDupe := seen[r]
@@ -96,14 +95,14 @@ func dedupe(repos []Repo) []Repo {
 	return out
 }
 
-func reposFromFile(input Input) ([]Repo, error) {
+func reposFromFile(p *lib.Provider, file string) ([]lib.Repo, error) {
 	// read file
-	bs, err := ioutil.ReadFile(input.ReposFromFile)
+	bs, err := ioutil.ReadFile(file)
 	if err != nil {
-		return []Repo{}, err
+		return []lib.Repo{}, err
 	}
 
-	repos := []Repo{}
+	repos := []lib.Repo{}
 	items := strings.Split(string(bs), "\n")
 	for _, item := range items {
 		if item == "" {
@@ -112,13 +111,13 @@ func reposFromFile(input Input) ([]Repo, error) {
 		}
 		parts := strings.Split(item, "/")
 		if len(parts) != 2 {
-			return []Repo{}, fmt.Errorf("unable determine repo from line, expected format '{org}/{repo}': %s", item)
+			return []lib.Repo{}, fmt.Errorf("unable determine repo from line, expected format '{org}/{repo}': %s", item)
 		}
-		repos = append(repos, Repo{
-			Owner:    parts[0],
-			Name:     parts[1],
-			CloneURL: fmt.Sprintf("git@%s.com:%s", input.RepoProvider, item),
-			Provider: input.RepoProvider,
+		repos = append(repos, lib.Repo{
+			Owner:          parts[0],
+			Name:           parts[1],
+			CloneURL:       fmt.Sprintf("%s:%s", p.CloneURLPrefix(), item),
+			ProviderConfig: p.ProviderConfig,
 		})
 	}
 	return repos, nil
@@ -128,14 +127,12 @@ func reposFromFile(input Input) ([]Repo, error) {
 //
 // GitHub Code Search Syntax:
 // https://help.github.com/articles/searching-code/
-func githubSearch(query string) ([]Repo, error) {
+func githubSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return []lib.Repo{}, err
+	}
 
 	opts := &github.SearchOptions{}
 	allRepos := map[string]*github.Repository{}
@@ -153,7 +150,7 @@ func githubSearch(query string) ([]Repo, error) {
 			time.Sleep(waitTime)
 			continue
 		} else if err != nil {
-			return []Repo{}, err
+			return []lib.Repo{}, err
 		}
 
 		for _, codeResult := range result.CodeResults {
@@ -172,17 +169,15 @@ func githubSearch(query string) ([]Repo, error) {
 		}
 		opts.Page = resp.NextPage
 	}
-	return getFormattedRepos(allRepos), nil
+	return getFormattedRepos(p, allRepos), nil
 }
 
-func githubRepoSearch(query string) ([]Repo, error) {
+func githubRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return []lib.Repo{}, err
+	}
 
 	opts := &github.SearchOptions{}
 	allRepos := map[string]*github.Repository{}
@@ -200,7 +195,7 @@ func githubRepoSearch(query string) ([]Repo, error) {
 			time.Sleep(waitTime)
 			continue
 		} else if err != nil {
-			return []Repo{}, err
+			return []lib.Repo{}, err
 		}
 
 		for _, repoResult := range result.Repositories {
@@ -219,17 +214,15 @@ func githubRepoSearch(query string) ([]Repo, error) {
 		opts.Page = resp.NextPage
 	}
 
-	return getFormattedRepos(allRepos), nil
+	return getFormattedRepos(p, allRepos), nil
 }
 
-func githubAllRepoSearch(query string) ([]Repo, error) {
+func githubAllRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: os.Getenv("GITHUB_API_TOKEN")},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	client := github.NewClient(tc)
+	client, err := p.GithubClient(ctx)
+	if err != nil {
+		return []lib.Repo{}, err
+	}
 
 	allRepos := map[string]*github.Repository{}
 	opts := &github.RepositoryListByOrgOptions{}
@@ -248,11 +241,11 @@ func githubAllRepoSearch(query string) ([]Repo, error) {
 			time.Sleep(waitTime)
 			continue
 		} else if err != nil {
-			return []Repo{}, err
+			return []lib.Repo{}, err
 		}
 
 		if err != nil {
-			return []Repo{}, err
+			return []lib.Repo{}, err
 		}
 
 		for _, repoResult := range result {
@@ -265,17 +258,17 @@ func githubAllRepoSearch(query string) ([]Repo, error) {
 		}
 		opts.Page = resp.NextPage
 	}
-	return getFormattedRepos(allRepos), nil
+	return getFormattedRepos(p, allRepos), nil
 }
 
-func getFormattedRepos(allRepos map[string]*github.Repository) []Repo {
-	formattedRepos := []Repo{}
+func getFormattedRepos(p *lib.Provider, allRepos map[string]*github.Repository) []lib.Repo {
+	formattedRepos := []lib.Repo{}
 	for _, r := range allRepos {
-		formattedRepos = append(formattedRepos, Repo{
-			Name:     r.GetName(),
-			Owner:    r.Owner.GetLogin(),
-			CloneURL: fmt.Sprintf("git@github.com:%s", r.GetFullName()),
-			Provider: "github",
+		formattedRepos = append(formattedRepos, lib.Repo{
+			Name:           r.GetName(),
+			Owner:          r.Owner.GetLogin(),
+			CloneURL:       fmt.Sprintf("git@github.com:%s", r.GetFullName()),
+			ProviderConfig: p.ProviderConfig,
 		})
 	}
 	return formattedRepos
@@ -286,23 +279,20 @@ func getFormattedRepos(allRepos map[string]*github.Repository) []Repo {
 // Gitlab Code Search Syntax:
 // https://docs.gitlab.com/ee/user/search/advanced_global_search.html
 // https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html
-func gitlabSearch(query string) ([]Repo, error) {
-	var projectIDs []int
-
-	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
-	isEnterprise := false
-	if os.Getenv("GITLAB_URL") != "" {
-		isEnterprise = true
-		client.SetBaseURL(os.Getenv("GITLAB_URL"))
+func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
+	client, err := p.GitlabClient()
+	if err != nil {
+		return nil, err
 	}
 
-	repos := []Repo{}
+	repos := []lib.Repo{}
 	repoNames := make(map[string]bool)
 	opt := &gitlab.SearchOptions{
 		PerPage: 20,
 		Page:    1,
 	}
-	if isEnterprise {
+	if p.IsEnterprise() {
+		var projectIDs []int
 		for {
 			blobs, resp, err := client.Search.Blobs(query, opt)
 			if err != nil {
@@ -319,11 +309,11 @@ func gitlabSearch(query string) ([]Repo, error) {
 					fmt.Println(err)
 				}
 				if _, ok := repoNames[project.Name]; !ok {
-					repos = append(repos, Repo{
-						Name:     project.Name,
-						Owner:    project.Namespace.FullPath,
-						CloneURL: project.SSHURLToRepo,
-						Provider: "gitlab",
+					repos = append(repos, lib.Repo{
+						Name:           project.Name,
+						Owner:          project.Namespace.FullPath,
+						CloneURL:       project.SSHURLToRepo,
+						ProviderConfig: p.ProviderConfig,
 					})
 					repoNames[project.Name] = true
 				}
@@ -341,11 +331,11 @@ func gitlabSearch(query string) ([]Repo, error) {
 			}
 			for _, project := range projects {
 				if _, ok := repoNames[project.Name]; !ok {
-					repos = append(repos, Repo{
-						Name:     project.Name,
-						Owner:    project.Namespace.FullPath,
-						CloneURL: project.SSHURLToRepo,
-						Provider: "gitlab",
+					repos = append(repos, lib.Repo{
+						Name:           project.Name,
+						Owner:          project.Namespace.FullPath,
+						CloneURL:       project.SSHURLToRepo,
+						ProviderConfig: p.ProviderConfig,
 					})
 					repoNames[project.Name] = true
 				}

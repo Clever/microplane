@@ -6,14 +6,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/stretchr/testify/assert"
 )
 
 var total = 0
 var mutex = sync.RWMutex{}
 
-func doNothingOneRepo(r initialize.Repo, ctx context.Context) error {
+func doNothingOneRepo(r lib.Repo, ctx context.Context) error {
 	// TODO: Write to a channel
 	fmt.Println("do nothing: ", r.Name)
 	// Side effect ... write a temp file
@@ -25,14 +25,14 @@ func doNothingOneRepo(r initialize.Repo, ctx context.Context) error {
 }
 
 func TestParallelize(t *testing.T) {
-	repos := []initialize.Repo{
-		initialize.Repo{
+	repos := []lib.Repo{
+		lib.Repo{
 			Name: "repo1",
 		},
-		initialize.Repo{
+		lib.Repo{
 			Name: "repo2",
 		},
-		initialize.Repo{
+		lib.Repo{
 			Name: "repo3",
 		},
 	}

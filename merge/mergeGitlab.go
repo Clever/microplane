@@ -3,9 +3,9 @@ package merge
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/Clever/microplane/lib"
 	"github.com/Clever/microplane/push"
 	gitlab "github.com/xanzy/go-gitlab"
 )
@@ -14,18 +14,19 @@ import (
 // - repoLimiter rate limits the # of calls to Github
 // - mergeLimiter rate limits # of merges, to prevent load when submitting builds to CI system
 func GitlabMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mergeLimiter *time.Ticker) (Output, error) {
-	// Create Gitlab Client
+	// Create client
+	p := lib.NewProviderFromConfig(input.Repo.ProviderConfig)
+	client, err := p.GitlabClient()
+	if err != nil {
+		return Output{}, err
+	}
 	ctxFunc := gitlab.WithContext(ctx)
 
-	client := gitlab.NewClient(nil, os.Getenv("GITLAB_API_TOKEN"))
-	if os.Getenv("GITLAB_URL") != "" {
-		client.SetBaseURL(os.Getenv("GITLAB_URL"))
-	}
 	// OK to merge?
 
 	// (1) Check if the MR is mergeable
 	<-repoLimiter.C
-	pid := fmt.Sprintf("%s/%s", input.Org, input.Repo)
+	pid := fmt.Sprintf("%s/%s", input.Repo.Owner, input.Repo.Name)
 	truePointer := true
 	mr, _, err := client.MergeRequests.GetMergeRequest(pid, input.PRNumber, &gitlab.GetMergeRequestsOptions{IncludeDivergedCommitsCount: &truePointer}, ctxFunc)
 	if err != nil {
@@ -42,7 +43,7 @@ func GitlabMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 
 	// (2) Check commit status
 	<-repoLimiter.C
-	pipelineStatus, err := push.GetPipelineStatus(client, input.Org, input.Repo, &gitlab.ListProjectPipelinesOptions{SHA: &input.CommitSHA})
+	pipelineStatus, err := push.GetPipelineStatus(client, input.Repo.Owner, input.Repo.Name, &gitlab.ListProjectPipelinesOptions{SHA: &input.CommitSHA})
 	if err != nil {
 		return Output{Success: false}, err
 	}
