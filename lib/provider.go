@@ -20,10 +20,6 @@ func (pc ProviderConfig) IsEnterprise() bool {
 	return pc.BackendURL != ""
 }
 
-func (pc ProviderConfig) CloneURLPrefix() string {
-	return fmt.Sprintf("git@%s.com", pc.Backend)
-}
-
 // Provider is an abstraction over a Git provider (Github, Gitlab, etc)
 type Provider struct {
 	ProviderConfig
@@ -48,8 +44,10 @@ func (p *Provider) GithubClient(ctx context.Context) (*github.Client, error) {
 	// create the client
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 	tc := oauth2.NewClient(ctx, ts)
+	if p.IsEnterprise() {
+		return github.NewEnterpriseClient(p.BackendURL, p.BackendURL, tc)
+	}
 	client := github.NewClient(tc)
-
 	return client, nil
 }
 
