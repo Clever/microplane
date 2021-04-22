@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Clever/microplane/lib"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v35/github"
 )
 
 // Command represents a command to run.
@@ -39,6 +39,8 @@ type Input struct {
 	BranchName string
 	// Labels
 	Labels []string
+	// Draft controls whether it should be a draft PR
+	Draft bool
 }
 
 // Output from Push()
@@ -122,6 +124,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		Body:  &body,
 		Head:  &head,
 		Base:  &base,
+		Draft: &input.Draft,
 	}, repoLimiter, pushLimiter)
 	if err != nil {
 		return Output{Success: false}, err
