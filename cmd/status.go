@@ -9,9 +9,11 @@ import (
 
 	"github.com/Clever/microplane/clone"
 	"github.com/Clever/microplane/initialize"
+	"github.com/Clever/microplane/lib"
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
+	"github.com/Clever/microplane/sync"
 	"github.com/fatih/color"
 	"github.com/nathanleiby/diffparser"
 	"github.com/spf13/cobra"
@@ -33,29 +35,9 @@ var statusCmd = &cobra.Command{
 			log.Fatalf("error loading init.json: %s\n", err.Error())
 		}
 
-		singleRepo, err := cmd.Flags().GetString("repo")
-		if err == nil && singleRepo != "" {
-			valid := false
-			validRepoNames := []string{}
-			for _, r := range initOutput.Repos {
-				if r.Name == singleRepo {
-					valid = true
-					break
-				}
-				validRepoNames = append(validRepoNames, r.Name)
-			}
-			if !valid {
-				log.Fatalf("%s not a targeted repo name (valid target repos are: %s)", singleRepo, strings.Join(validRepoNames, ", "))
-			}
-			isSingleRepo = true
-		}
-
-		repos := []string{}
-		for _, r := range initOutput.Repos {
-			if singleRepo != "" && r.Name != singleRepo {
-				continue
-			}
-			repos = append(repos, r.Name)
+		repos, err := whichRepos(cmd)
+		if err != nil {
+			log.Fatal(err)
 		}
 		printStatus(repos)
 	},
@@ -76,7 +58,7 @@ func joinWithTab(s ...string) string {
 	return strings.Join(s, "\t")
 }
 
-func printStatus(repos []string) {
+func printStatus(repos []lib.Repo) {
 	out := tabWriterWithDefaults()
 	fmt.Fprintln(out, joinWithTab("REPO", "STATUS", "DETAILS"))
 	for _, r := range repos {
@@ -86,19 +68,20 @@ func printStatus(repos []string) {
 		if len(d3) > 150 {
 			d3 = d3[:150] + "..."
 		}
-		fmt.Fprintln(out, joinWithTab(r, status, d3))
+		fmt.Fprintln(out, joinWithTab(r.Name, status, d3))
 	}
 	out.Flush()
 }
 
-func getRepoStatus(repo string) (status, details string) {
+func getRepoStatus(repo lib.Repo) (status, details string) {
+	repoName := repo.Name
 	status = "initialized"
 	details = ""
 	var cloneOutput struct {
 		clone.Output
 		Error string
 	}
-	if !(loadJSON(outputPath(repo, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
+	if !(loadJSON(outputPath(repoName, "clone"), &cloneOutput) == nil && cloneOutput.Success) {
 		if cloneOutput.Error != "" {
 			details = color.RedString("(clone error) ") + cloneOutput.Error
 		}
@@ -110,7 +93,7 @@ func getRepoStatus(repo string) (status, details string) {
 		plan.Output
 		Error string
 	}
-	if !(loadJSON(outputPath(repo, "plan"), &planOutput) == nil && planOutput.Success) {
+	if !(loadJSON(outputPath(repoName, "plan"), &planOutput) == nil && planOutput.Success) {
 		if planOutput.Error != "" {
 			details = color.RedString("(plan error) ") + planOutput.Error
 		}
@@ -129,7 +112,9 @@ func getRepoStatus(repo string) (status, details string) {
 		push.Output
 		Error string
 	}
-	if !(loadJSON(outputPath(repo, "push"), &pushOutput) == nil && pushOutput.Success) {
+	//Sync with PR
+	sync.Push(repo)
+	if !(loadJSON(outputPath(repoName, "push"), &pushOutput) == nil && pushOutput.Success) {
 		if pushOutput.Error != "" {
 			details = color.RedString("(push error) ") + pushOutput.Error
 		}
@@ -142,7 +127,8 @@ func getRepoStatus(repo string) (status, details string) {
 		merge.Output
 		Error string
 	}
-	if !(loadJSON(outputPath(repo, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
+	// check PR was merged
+	if !(loadJSON(outputPath(repoName, "merge"), &mergeOutput) == nil && mergeOutput.Success) {
 		if mergeOutput.Error != "" {
 			details = color.RedString("(merge error) ") + mergeOutput.Error
 		}
