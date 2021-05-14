@@ -47,6 +47,9 @@ func init() {
 	pushCmd.Flags().StringSliceVarP(&pushFlagLabels, "labels", "l", nil, "labels to attach to PR")
 
 	rootCmd.AddCommand(statusCmd)
+	statusCmd.Flags().BoolP("sync", "s", false, "Sync workflow status with repo origin")
+
+	rootCmd.AddCommand(syncCmd)
 
 	rootCmd.AddCommand(initCmd)
 
