@@ -82,7 +82,7 @@ func syncPush(r lib.Repo, ctx context.Context, pushOutput push.Output) (sync.Out
 	var output sync.Output
 	var err error
 	if r.IsGitlab() {
-		output, err = sync.GitlabSyncPush()
+		output, err = sync.GitlabSyncPush(ctx, r, pushOutput, repoLimiter)
 	} else if r.IsGithub() {
 		output, err = sync.GithubSyncPush(ctx, r, pushOutput, repoLimiter)
 	}
