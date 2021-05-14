@@ -11,6 +11,8 @@ import (
 type Output struct {
 	CommitSHA                 string
 	PullRequestCombinedStatus string
+	MergeCommitSHA            string
+	Merged                    bool
 }
 
 func GithubSyncPush(ctx context.Context, r lib.Repo, po push.Output, repoLimiter *time.Ticker) (Output, error) {
@@ -35,5 +37,7 @@ func GithubSyncPush(ctx context.Context, r lib.Repo, po push.Output, repoLimiter
 	return Output{
 		CommitSHA:                 *pr.Head.SHA,
 		PullRequestCombinedStatus: *cs.State,
+		MergeCommitSHA:            *pr.MergeCommitSHA,
+		Merged:                    *pr.Merged,
 	}, nil
 }

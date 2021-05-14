@@ -4,9 +4,11 @@ import (
 	"context"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/Clever/microplane/initialize"
 	"github.com/Clever/microplane/lib"
+	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/push"
 	"github.com/Clever/microplane/sync"
 	"github.com/spf13/cobra"
@@ -53,14 +55,29 @@ func syncOneRepo(r lib.Repo, ctx context.Context) error {
 	if !(loadJSON(outputPath(repoName, "push"), &pushOutput) == nil && pushOutput.Success) {
 		return nil
 	}
-	err := syncPush(r, ctx, pushOutput.Output)
+	output, err := syncPush(r, ctx, pushOutput.Output)
 	if err != nil {
 		return err
 	}
+
+	var mergeOutput struct {
+		merge.Output
+		Error string
+	}
+
+	if loadJSON(outputPath(repoName, "merge"), &mergeOutput) == nil && mergeOutput.Success {
+		return nil
+	}
+
+	if err := syncMerge(r, ctx, output); err != nil {
+		return err
+	}
+
+	log.Printf("synced: %s/%s", r.Owner, r.Name)
 	return nil
 }
 
-func syncPush(r lib.Repo, ctx context.Context, pushOutput push.Output) error {
+func syncPush(r lib.Repo, ctx context.Context, pushOutput push.Output) (sync.Output, error) {
 
 	var output sync.Output
 	var err error
@@ -70,12 +87,28 @@ func syncPush(r lib.Repo, ctx context.Context, pushOutput push.Output) error {
 		output, err = sync.GithubSyncPush(ctx, r, pushOutput, repoLimiter)
 	}
 	if err != nil {
-		return err
+		return sync.Output{}, err
 	}
 	pushOutput.CommitSHA = output.CommitSHA
 	pushOutput.PullRequestCombinedStatus = output.PullRequestCombinedStatus
 
 	writeJSON(pushOutput, outputPath(r.Name, "push"))
-	log.Printf("synced: %s/%s", r.Owner, r.Name)
+	return output, nil
+}
+func syncMerge(r lib.Repo, ctx context.Context, output sync.Output) error {
+	if !output.Merged {
+		return nil
+	}
+
+	mergeOutputPath := outputPath(r.Name, "merge")
+	mergeWorkDir := filepath.Dir(mergeOutputPath)
+	if err := os.MkdirAll(mergeWorkDir, 0755); err != nil {
+		return err
+	}
+
+	writeJSON(merge.Output{
+		Success:        true,
+		MergeCommitSHA: output.MergeCommitSHA,
+	}, mergeOutputPath)
 	return nil
 }
