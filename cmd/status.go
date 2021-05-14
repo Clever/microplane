@@ -13,7 +13,6 @@ import (
 	"github.com/Clever/microplane/merge"
 	"github.com/Clever/microplane/plan"
 	"github.com/Clever/microplane/push"
-	"github.com/Clever/microplane/sync"
 	"github.com/fatih/color"
 	"github.com/nathanleiby/diffparser"
 	"github.com/spf13/cobra"
@@ -39,6 +38,18 @@ var statusCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal(err)
 		}
+		sync, err := cmd.Flags().GetBool("sync")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if sync {
+			err = parallelize(repos, syncOneRepo)
+			if err != nil {
+				// TODO: dig into errors and display them with more detail
+				log.Fatal(err)
+			}
+		}
+
 		printStatus(repos)
 	},
 }
@@ -112,8 +123,6 @@ func getRepoStatus(repo lib.Repo) (status, details string) {
 		push.Output
 		Error string
 	}
-	//Sync with PR
-	sync.Push(repo)
 	if !(loadJSON(outputPath(repoName, "push"), &pushOutput) == nil && pushOutput.Success) {
 		if pushOutput.Error != "" {
 			details = color.RedString("(push error) ") + pushOutput.Error
