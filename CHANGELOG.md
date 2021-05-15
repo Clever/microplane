@@ -1,5 +1,10 @@
 # changelog
 
+2021-05-14 - v0.0.29
+
+- Adds - Command `mp sync` to sync local status with remote status [#81](https://github.com/Clever/microplane/pull/81)
+- Changes - Command `mp status` has flag `--sync` to sync local status with remote status [#81](https://github.com/Clever/microplane/pull/81)
+
 2021-03-22 - v0.0.28
 
 - Adds MVP support for Github enterprise (testing pending). [#74](https://github.com/Clever/microplane/pull/74)
