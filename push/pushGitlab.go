@@ -79,7 +79,7 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	return Output{
 		Success:                   true,
 		CommitSHA:                 pr.SHA,
-		PullRequestNumber:         pr.ID,
+		PullRequestNumber:         pr.IID,
 		PullRequestURL:            pr.WebURL,
 		PullRequestCombinedStatus: pipelineStatus,
 		PullRequestAssignee:       input.PRAssignee,

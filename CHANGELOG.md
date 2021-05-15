@@ -1,5 +1,9 @@
 # changelog
 
+2021-05-14 - v0.0.30
+
+- Fixes - `mp sync` bug in Gitlab, due to ID vs IID
+
 2021-05-14 - v0.0.29
 
 - Adds - Command `mp sync` to sync local status with remote status [#81](https://github.com/Clever/microplane/pull/81)

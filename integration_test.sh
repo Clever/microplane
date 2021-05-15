@@ -52,17 +52,29 @@ echo "$owner/2" >> $tmpfile
 ./bin/mp init --provider $provider -f $tmpfile
 rm $tmpfile
 
+echo ""
 echo "[Clone]"
 ./bin/mp clone
 ts=`date +"%T"`
 
+./bin/mp status
+./bin/mp sync
 
+echo ""
 echo "[Plan]"
 ./bin/mp plan -b plan -m "plan" -- sh -c "echo $ts >> README.md"
 
+./bin/mp status
+./bin/mp sync
+
+echo ""
 echo "[Push]"
 ./bin/mp push --throttle 2s -a nathanleiby
 
+./bin/mp status
+./bin/mp sync
+
+echo ""
 echo "[Merge]"
 cmd='./bin/mp merge --throttle 2s --ignore-build-status --ignore-review-approval'
 duration=10
@@ -71,3 +83,6 @@ until $cmd; do
     sleep $duration
 done
 
+echo ""
+./bin/mp status
+./bin/mp sync
