@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/Clever/microplane/lib"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v35/github"
 )
 
 // Input to Push()

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Clever/microplane/lib"
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v35/github"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -199,7 +199,7 @@ func githubRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 
 		for _, repoResult := range result.Repositories {
 			numProcessedResults = numProcessedResults + 1
-			allRepos[*repoResult.Name] = &repoResult
+			allRepos[*repoResult.Name] = repoResult
 		}
 
 		incompleteResults := result.GetIncompleteResults()

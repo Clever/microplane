@@ -67,6 +67,9 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 		isSingleRepo = len(repos) == 1
 
 		parallelismLimit, err = cmd.Flags().GetInt64("parallelism")
+		if err != nil {
+			log.Fatal(err)
+		}
 		log.Printf("planning %d repos with parallelism limit [%d]", len(repos), parallelismLimit)
 		err = parallelizeLimited(repos, planOneRepo, parallelismLimit)
 		if err != nil {

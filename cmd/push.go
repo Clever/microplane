@@ -20,6 +20,7 @@ var pushFlagAssignee string
 var pushFlagThrottle string
 var pushFlagBodyFile string
 var pushFlagLabels []string
+var pushFlagDraft bool
 
 // rate limits the # of git pushes. used to prevent load on CI system
 var pushThrottle *time.Ticker
@@ -27,6 +28,7 @@ var pushThrottle *time.Ticker
 var prAssignee string
 var prBody string
 var prLabels []string
+var prDraft bool
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
@@ -74,6 +76,12 @@ var pushCmd = &cobra.Command{
 		if len(labels) > 0 {
 			prLabels = labels
 		}
+
+		draft, err := cmd.Flags().GetBool("draft")
+		if err != nil {
+			log.Fatal(err)
+		}
+		prDraft = draft
 
 		repos, err := whichRepos(cmd)
 		if err != nil {
@@ -130,6 +138,7 @@ func pushOneRepo(r lib.Repo, ctx context.Context) error {
 		PRAssignee:    prAssignee,
 		BranchName:    planOutput.BranchName,
 		Labels:        prLabels,
+		Draft:         prDraft,
 	}
 	var output push.Output
 	var err error

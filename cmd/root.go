@@ -45,6 +45,7 @@ func init() {
 	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
 	pushCmd.Flags().StringSliceVarP(&pushFlagLabels, "labels", "l", nil, "labels to attach to PR")
+	pushCmd.Flags().BoolVarP(&pushFlagDraft, "draft", "d", false, "push a draft pull request (only supported for github)")
 
 	rootCmd.AddCommand(statusCmd)
 	statusCmd.Flags().BoolP("sync", "s", false, "Sync workflow status with repo origin")
