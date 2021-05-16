@@ -1,5 +1,10 @@
 # changelog
 
+2021-05-15 - v0.0.31
+
+- Adds - `--draft` flag added to `mp push`, to create a draft Pull Request
+- Adds - `mp version` command prints Microplane's version
+
 2021-05-14 - v0.0.30
 
 - Fixes - `mp sync` bug in Gitlab, due to ID vs IID
