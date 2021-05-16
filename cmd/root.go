@@ -50,6 +50,8 @@ func init() {
 
 	rootCmd.AddCommand(initCmd)
 
+	rootCmd.AddCommand(versionCmd)
+
 	var err error
 	workDir, err = filepath.Abs("./mp")
 	if err != nil {
