@@ -37,6 +37,7 @@ func init() {
 
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
+	planCmd.Flags().BoolVarP(&planFlagDiff, "diff", "d", false, "Show the diffs of the changes made per repo")
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
 	planCmd.Flags().Int64VarP(&planFlagParallelism, "parallelism", "p", defaultParallelism, "Parallelism limit")
 
