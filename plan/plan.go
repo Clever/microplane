@@ -78,7 +78,7 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 
 	// add the git diff to output, might be useful / convenient?
 	var gitDiff string
-	gitDiffCmd := exec.CommandContext(ctx, "git", "diff", "HEAD^", "HEAD")
+	gitDiffCmd := exec.CommandContext(ctx, "git", "diff", "--color", "HEAD^", "HEAD")
 	gitDiffCmd.Dir = planDir
 	output, err := gitDiffCmd.CombinedOutput()
 	if err != nil {
