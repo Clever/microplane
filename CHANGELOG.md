@@ -1,5 +1,10 @@
 # changelog
 
+unreleased - v0.0.32
+
+- Adds - `--diff` flag added to `mp plan` to show the diff of the changes made in each repo
+- Changes - `mp plan` no longer shows the diff for a single repo by default
+
 2021-05-15 - v0.0.31
 
 - Adds - `--draft` flag added to `mp push`, to create a draft Pull Request

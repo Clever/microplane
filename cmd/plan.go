@@ -16,6 +16,7 @@ import (
 )
 
 var planFlagBranch string
+var planFlagDiff bool
 var planFlagMessage string
 var planFlagParallelism int64
 
@@ -27,6 +28,7 @@ var (
 	changeCmd     string
 	changeCmdArgs []string
 	isSingleRepo  bool
+	showDiff      bool
 )
 
 var planCmd = &cobra.Command{
@@ -51,6 +53,12 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 		if branchName == "" {
 			log.Fatal("--branch is required")
 		}
+
+		diff, err := cmd.Flags().GetBool("diff")
+		if err != nil {
+			log.Fatal(err)
+		}
+		showDiff = diff
 
 		commitMessage, err = cmd.Flags().GetString("message")
 		if err != nil {
@@ -124,7 +132,8 @@ func planOneRepo(r lib.Repo, ctx context.Context) error {
 		return fmt.Errorf("%s/%s error: %+v", r.Owner, r.Name, err)
 	}
 	writeJSON(output, planOutputPath)
-	if isSingleRepo {
+	if showDiff {
+		log.Printf("diffing: %s/%s", r.Owner, r.Name)
 		fmt.Println(output.GitDiff)
 	}
 	return nil

@@ -30,6 +30,8 @@ type Input struct {
 	CommitMessage string
 	// BranchName where the commit will be made
 	BranchName string
+	// Whether to display the diff of changes made
+	Diff bool
 }
 
 // Output for Plan
