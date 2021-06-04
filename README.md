@@ -13,7 +13,7 @@ _"the lemon is Git{Hub,Lab}"_
 Here are several ways to install microplane:
 
 - *Pre-built release* - You can download a pre-built version of Microplane from the [Github releases](https://github.com/Clever/microplane/releases).
-- *Compile it yourself*  - Run `go get github.com/clever/microplane/cmd`. In this case the binary will be installed to `$GOPATH/bin/microplane`. Alternately, you can follow the steps under "Development", below.
+- *Compile it yourself*  - Run `go get github.com/Clever/microplane/cmd`. In this case the binary will be installed to `$GOPATH/bin/microplane`. Alternately, you can follow the steps under "Development", below.
 - *Homebrew* - `brew install microplane`. The latest homebrew formula is [here](https://github.com/Homebrew/homebrew-core/blob/master/Formula/microplane.rb)
 
 ## Usage
