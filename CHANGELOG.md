@@ -1,5 +1,11 @@
 # changelog
 
+HEAD
+
+- Add option to set merge method (merge, squash or rebase). (Example: `mp merge --merge-method squash`)
+
+---
+
 2021-05-22 - v0.0.32
 
 - Adds - `--diff` flag added to `mp plan` to show the diff of the changes made in each repo
