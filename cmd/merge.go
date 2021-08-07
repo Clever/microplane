@@ -19,6 +19,7 @@ import (
 var mergeFlagThrottle string
 var mergeFlagIgnoreReviewApproval bool
 var mergeFlagIgnoreBuildStatus bool
+var mergeMethod string
 
 // rate limits the # of PR merges. used to prevent load on CI system
 var mergeThrottle *time.Ticker
@@ -92,6 +93,7 @@ func mergeOneRepo(r lib.Repo, ctx context.Context) error {
 		CommitSHA:             pushOutput.CommitSHA,
 		RequireReviewApproval: !mergeFlagIgnoreReviewApproval,
 		RequireBuildSuccess:   !mergeFlagIgnoreBuildStatus,
+		MergeMethod:           mergeMethod,
 	}
 	var output merge.Output
 	if r.IsGitlab() {
