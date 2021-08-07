@@ -51,6 +51,7 @@ For an in-depth example, check out the [introductory blogpost](https://medium.co
 ## Related projects
 
 - https://github.com/Skyscanner/turbolift
+- https://github.com/octoherd/cli
 
 ## Development
 
