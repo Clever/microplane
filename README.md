@@ -48,6 +48,10 @@ To make a change, use the following series of commands.
 
 For an in-depth example, check out the [introductory blogpost](https://medium.com/always-a-student/mo-repos-mo-problems-how-we-make-changes-across-many-git-repositories-293ad7d418f0).
 
+## Related projects
+
+- https://github.com/Skyscanner/turbolift
+
 ## Development
 
 See [`Development.md`](./DEVELOPMENT.md).
