@@ -1,10 +1,8 @@
 # changelog
 
-HEAD
+2021-08-11 - v0.0.33
 
 - Add option to set merge method (merge, squash or rebase). (Example: `mp merge --merge-method squash`)
-
----
 
 2021-05-22 - v0.0.32
 
