@@ -29,29 +29,12 @@ func init() {
 	rootCmd.PersistentFlags().StringP("repo", "r", "", "single repo to operate on")
 	rootCmd.AddCommand(cloneCmd)
 	rootCmd.AddCommand(docsCmd)
-
 	rootCmd.AddCommand(mergeCmd)
-
 	rootCmd.AddCommand(planCmd)
-	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
-	planCmd.Flags().BoolVarP(&planFlagDiff, "diff", "d", false, "Show the diffs of the changes made per repo")
-	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
-	planCmd.Flags().Int64VarP(&planFlagParallelism, "parallelism", "p", defaultParallelism, "Parallelism limit")
-
 	rootCmd.AddCommand(pushCmd)
-	pushCmd.Flags().StringVarP(&pushFlagThrottle, "throttle", "t", "30s", "Throttle number of pushes, e.g. '30s' means 1 push per 30 seconds")
-	pushCmd.Flags().StringVarP(&pushFlagAssignee, "assignee", "a", "", "Github user to assign the PR to")
-	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
-	pushCmd.Flags().StringSliceVarP(&pushFlagLabels, "labels", "l", nil, "labels to attach to PR")
-	pushCmd.Flags().BoolVarP(&pushFlagDraft, "draft", "d", false, "push a draft pull request (only supported for github)")
-
 	rootCmd.AddCommand(statusCmd)
-	statusCmd.Flags().BoolP("sync", "s", false, "Sync workflow status with repo origin")
-
 	rootCmd.AddCommand(syncCmd)
-
 	rootCmd.AddCommand(initCmd)
-
 	rootCmd.AddCommand(versionCmd)
 
 	var err error

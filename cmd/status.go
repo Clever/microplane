@@ -148,3 +148,7 @@ func getRepoStatus(repo lib.Repo) (status, details string) {
 
 	return
 }
+
+func init() {
+	statusCmd.Flags().BoolP("sync", "s", false, "Sync workflow status with repo origin")
+}
