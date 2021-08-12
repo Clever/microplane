@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,9 +20,12 @@ import (
 var mergeFlagThrottle string
 var mergeFlagIgnoreReviewApproval bool
 var mergeFlagIgnoreBuildStatus bool
+var mergeMethod string
 
 // rate limits the # of PR merges. used to prevent load on CI system
 var mergeThrottle *time.Ticker
+
+var supportedMergeMethods = []string{"merge", "squash", "rebase"}
 
 var mergeCmd = &cobra.Command{
 	Use:   "merge",
@@ -44,6 +48,10 @@ var mergeCmd = &cobra.Command{
 				log.Fatalf("Error parsing --throttle flag: %s", err.Error())
 			}
 			mergeThrottle = time.NewTicker(dur)
+		}
+
+		if !contains(supportedMergeMethods, mergeMethod) {
+			log.Fatalf("Invalid --merge-method: %s", mergeMethod)
 		}
 
 		err = parallelize(repos, mergeOneRepo)
@@ -92,6 +100,7 @@ func mergeOneRepo(r lib.Repo, ctx context.Context) error {
 		CommitSHA:             pushOutput.CommitSHA,
 		RequireReviewApproval: !mergeFlagIgnoreReviewApproval,
 		RequireBuildSuccess:   !mergeFlagIgnoreBuildStatus,
+		MergeMethod:           mergeMethod,
 	}
 	var output merge.Output
 	if r.IsGitlab() {
@@ -112,4 +121,20 @@ func mergeOneRepo(r lib.Repo, ctx context.Context) error {
 	}
 	writeJSON(output, mergeOutputPath)
 	return nil
+}
+
+func init() {
+	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "30s", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
+	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreReviewApproval, "ignore-review-approval", false, "Ignore whether or not the review has been approved")
+	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreBuildStatus, "ignore-build-status", false, "Ignore whether or not builds are passing")
+	mergeCmd.Flags().StringVarP(&mergeMethod, "merge-method", "m", "merge", fmt.Sprintf("Merge method to use. Possible values include: %s", strings.Join(supportedMergeMethods, ", ")))
+}
+
+func contains(list []string, item string) bool {
+	for _, each := range list {
+		if each == item {
+			return true
+		}
+	}
+	return false
 }

@@ -23,6 +23,8 @@ type Input struct {
 	RequireReviewApproval bool
 	// RequireBuildSuccess specifies if the PR must have a successful build before merging
 	RequireBuildSuccess bool
+	// Merge method to use. Possible values include: "merge", "squash", and "rebase"
+	MergeMethod string
 }
 
 // Output from Push()
@@ -95,7 +97,9 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	}
 
 	// Merge the PR
-	options := &github.PullRequestOptions{}
+	options := &github.PullRequestOptions{
+		MergeMethod: input.MergeMethod,
+	}
 	commitMsg := ""
 	<-mergeLimiter.C
 	<-repoLimiter.C
