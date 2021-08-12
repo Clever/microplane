@@ -31,10 +31,6 @@ func init() {
 	rootCmd.AddCommand(docsCmd)
 
 	rootCmd.AddCommand(mergeCmd)
-	mergeCmd.Flags().StringVarP(&mergeFlagThrottle, "throttle", "t", "30s", "Throttle number of merges, e.g. '30s' means 1 merge per 30 seconds")
-	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreReviewApproval, "ignore-review-approval", false, "Ignore whether or not the review has been approved")
-	mergeCmd.Flags().BoolVar(&mergeFlagIgnoreBuildStatus, "ignore-build-status", false, "Ignore whether or not builds are passing")
-	mergeCmd.Flags().StringVarP(&mergeMethod, "merge-method", "m", "merge", "Merge method to use. Possible values include: merge, squash, and rebase")
 
 	rootCmd.AddCommand(planCmd)
 	planCmd.Flags().StringVarP(&planFlagBranch, "branch", "b", "", "Git branch to commit to")
