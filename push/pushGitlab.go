@@ -39,9 +39,14 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		return Output{Success: false}, errors.New(string(output))
 	}
 
+	project, _, err := client.Projects.GetProject(fmt.Sprintf("%s/%s", input.Repo.Owner, input.Repo.Name), nil)
+	if err != nil {
+		return Output{Success: false}, err
+	}
+
 	// Open a pull request, if one doesn't exist already
 	head := input.BranchName
-	base := "master"
+	base := project.DefaultBranch
 
 	// Determine MR title and body
 	// Title is first line of commit message.
