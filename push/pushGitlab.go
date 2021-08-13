@@ -48,19 +48,7 @@ func GitlabPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	head := input.BranchName
 	base := project.DefaultBranch
 
-	// Determine MR title and body
-	// Title is first line of commit message.
-	// Body is given by body-file if it exists or is the remainder of the commit message after title.
-	title := input.CommitMessage
-	body := ""
-	splitMsg := strings.SplitN(input.CommitMessage, "\n", 2)
-	if len(splitMsg) == 2 {
-		title = splitMsg[0]
-		if input.PRBody == "" {
-			body = splitMsg[1]
-		}
-	}
-
+	title, body := getTitleBody(input)
 	pr, err := findOrCreateGitlabMR(ctx, client, input.Repo.Owner, input.Repo.Name, &gitlab.CreateMergeRequestOptions{
 		Title:        &title,
 		Description:  &body,
