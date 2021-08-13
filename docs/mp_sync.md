@@ -1,15 +1,15 @@
-## mp clone
+## mp sync
 
-Clone all repos targeted by init
+Sync workflow status with remote repo
 
 ```
-mp clone [flags]
+mp sync [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for clone
+  -h, --help   help for sync
 ```
 
 ### Options inherited from parent commands

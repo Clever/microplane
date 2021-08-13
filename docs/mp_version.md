@@ -1,15 +1,15 @@
-## mp clone
+## mp version
 
-Clone all repos targeted by init
+Print the current microplane version
 
 ```
-mp clone [flags]
+mp version [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for clone
+  -h, --help   help for version
 ```
 
 ### Options inherited from parent commands
