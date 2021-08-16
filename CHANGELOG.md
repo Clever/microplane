@@ -1,5 +1,10 @@
 # changelog
 
+2021-08-16 - v0.0.34
+
+- Changes - use the default branch as the Gitlab PR target
+- Changes - make the Gitlab PR body consistent with Github
+
 2021-08-11 - v0.0.33
 
 - Add option to set merge method (merge, squash or rebase). (Example: `mp merge --merge-method squash`)
