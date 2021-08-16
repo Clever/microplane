@@ -286,8 +286,10 @@ func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 	repos := []lib.Repo{}
 	repoNames := make(map[string]bool)
 	opt := &gitlab.SearchOptions{
-		PerPage: 20,
-		Page:    1,
+		ListOptions: gitlab.ListOptions{
+			PerPage: 20,
+			Page:    1,
+		},
 	}
 	if p.IsEnterprise() {
 		var projectIDs []int
