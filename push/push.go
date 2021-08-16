@@ -109,16 +109,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 	}
 	base := *repository.DefaultBranch
 
-	// Determine PR title and body
-	// Title is first line of commit message.
-	// Body is the remainder of the commit message after title AND/OR `body-file` content if given
-	title := input.CommitMessage
-	body := input.PRBody
-	splitMsg := strings.SplitN(input.CommitMessage, "\n", 2)
-	if len(splitMsg) == 2 {
-		title = splitMsg[0]
-		body = splitMsg[1] + "\n" + input.PRBody
-	}
+	title, body := getTitleBody(input)
 	pr, err := findOrCreatePR(ctx, client, input.Repo.Owner, input.Repo.Name, &github.NewPullRequest{
 		Title: &title,
 		Body:  &body,
@@ -219,4 +210,20 @@ func findOrCreatePR(ctx context.Context, client *github.Client, owner string, na
 
 func different(s1, s2 *string) bool {
 	return s1 != nil && s2 != nil && *s1 != *s2
+}
+
+// Determine PR title and body
+// Title is first line of commit message.
+// Body is the remainder of the commit message after title AND/OR `body-file` content if given
+func getTitleBody(input Input) (string, string) {
+	title := input.CommitMessage
+	body := input.PRBody
+
+	splitMsg := strings.SplitN(input.CommitMessage, "\n", 2)
+	if len(splitMsg) == 2 {
+		title = splitMsg[0]
+		body = splitMsg[1] + "\n" + input.PRBody
+	}
+
+	return title, body
 }
