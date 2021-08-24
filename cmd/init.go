@@ -22,10 +22,14 @@ $ mp init -f repos.txt
 
 where repos.txt has lines like:
 
-	clever/repo2
-	clever/repo2
+	Clever/repo2
+	Clever/repo2
 
 ## (2) Init via Search
+
+The list of repositories can be built by doing a search with the provider.
+
+In this mode, any archived repos matching the query will be skipped, since archived repos are read-only.
 
 ### GitHub Code Search
 

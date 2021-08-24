@@ -199,7 +199,10 @@ func githubRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 
 		for _, repoResult := range result.Repositories {
 			numProcessedResults = numProcessedResults + 1
-			allRepos[*repoResult.Name] = repoResult
+			// Archived repositories cannot be editted, so they should not be initialized
+			if repoResult.Archived != nil && !(*repoResult.Archived) {
+				allRepos[*repoResult.Name] = repoResult
+			}
 		}
 
 		incompleteResults := result.GetIncompleteResults()
@@ -249,6 +252,10 @@ func githubAllRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 
 		for _, repoResult := range result {
 			numProcessedResults = numProcessedResults + 1
+			// Archived repositories cannot be editted, so they should not be initialized
+			if repoResult.Archived != nil && !(*repoResult.Archived) {
+				allRepos[*repoResult.Name] = repoResult
+			}
 			allRepos[*repoResult.Name] = repoResult
 		}
 
@@ -308,6 +315,10 @@ func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 				if err != nil {
 					fmt.Println(err)
 				}
+				// Archived repositories cannot be editted, so they should not be initialized
+				if project.Archived {
+					continue
+				}
 				if _, ok := repoNames[project.Name]; !ok {
 					repos = append(repos, lib.Repo{
 						Name:           project.Name,
@@ -330,6 +341,10 @@ func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 				fmt.Println(err)
 			}
 			for _, project := range projects {
+				// Archived repositories cannot be editted, so they should not be initialized
+				if project.Archived {
+					continue
+				}
 				if _, ok := repoNames[project.Name]; !ok {
 					repos = append(repos, lib.Repo{
 						Name:           project.Name,
