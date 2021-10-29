@@ -11,11 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var useTokenForClone bool
+
 var cloneCmd = &cobra.Command{
 	Use:   "clone",
 	Short: "Clone all repos targeted by init",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		var err error
+		useTokenForClone, err = cmd.Flags().GetBool("use-token-for-clone")
+		if err != nil {
+			log.Fatal(err)
+		}
 		repos, err := whichRepos(cmd)
 		if err != nil {
 			log.Fatal(err)
@@ -39,7 +46,7 @@ func cloneOneRepo(r lib.Repo, ctx context.Context) error {
 	}
 
 	// Execute
-	cloneURL, err := r.ComputedCloneURL()
+	cloneURL, err := r.ComputedCloneURL(useTokenForClone)
 	if err != nil {
 		return err
 	}
@@ -59,4 +66,8 @@ func cloneOneRepo(r lib.Repo, ctx context.Context) error {
 	}
 	writeJSON(output, cloneOutputPath)
 	return nil
+}
+
+func init() {
+	cloneCmd.Flags().BoolVar(&useTokenForClone, "use-token-for-clone", false, "uses GITHUB_API_TOKEN env instead of ssh to clone")
 }
