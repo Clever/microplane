@@ -1,5 +1,9 @@
 # changelog
 
+2021-10-28 - v0.0.35
+
+- Adds - `--use-token-for-clone` flag added to `mp clone` to use GITHUB_API_TOKEN env instead of ssh url
+
 2021-08-16 - v0.0.34
 
 - Changes - use the default branch as the Gitlab PR target
