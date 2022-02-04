@@ -22,7 +22,7 @@ Here are several ways to install microplane:
 
 The `GITHUB_API_TOKEN` environment variable must be set for Github. This should be a [GitHub Token](https://github.com/settings/tokens) with `repo` scope.
 
-Optional: If you use self-hosted Github, you can specify its URL by passing `--provider_url=<your URL>` when running `mp init`.
+Optional: If you use self-hosted Github, you can specify its URL by passing `--provider-url=<your URL>` when running `mp init`.
 This URL should look like: `https://[hostname]`. Don't include path parameters like `/api/v3` or `/api/uploads`.
 
 _Self-hosted Github setup with different URLs for the main API and uploads API are not yet supported. If this is a blocker for you, please file an issue or make a PR._
@@ -33,7 +33,7 @@ The `GITLAB_API_TOKEN` environment variable must be set for Gitlab. This should 
 
 To use Gitlab, you must specifically pass `--provider=gitlab` when running `mp init`.
 
-Optional: If you use a self-hosted Gitlab, you can specify its URL by passing `--provider_url=<your URL>` when running `mp init`.
+Optional: If you use a self-hosted Gitlab, you can specify its URL by passing `--provider-url=<your URL>` when running `mp init`.
 
 ### Using Microplane
 
