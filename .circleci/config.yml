@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: /go/src/github.com/Clever/microplane
     docker:
-    - image: circleci/golang:1.15-buster
+    - image: circleci/golang:1.17-buster
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
