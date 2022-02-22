@@ -5,7 +5,7 @@ include golang.mk
 PKGS := $(shell go list ./... | grep -v vendor)
 VERSION := $(shell head -n 1 VERSION)
 EXECUTABLE := mp
-$(eval $(call golang-version-check,1.15))
+$(eval $(call golang-version-check,1.17))
 
 all: test build release
 
