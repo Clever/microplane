@@ -6,9 +6,9 @@ require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
 	github.com/fatih/color v1.13.0
 	github.com/google/go-github/v35 v35.3.0
-	github.com/nathanleiby/diffparser v0.0.0-20180103231304-936553ce5db1
 	github.com/spf13/cobra v1.3.0
 	github.com/stretchr/testify v1.7.0
+	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.55.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -29,10 +29,10 @@ require (
 	github.com/juju/testing v0.0.0-20210324180055-18c50b0c2098 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
+	github.com/nathanleiby/diffparser v0.0.0-20180103231304-936553ce5db1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
 	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d // indirect
