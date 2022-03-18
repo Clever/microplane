@@ -164,8 +164,8 @@ github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMT
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d h1:xQcF7b7cZLWZG/+7A4G7un1qmEDYHIvId9qxRS1mZMs=
 github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d/go.mod h1:BzSc3WEF8R+lCaP5iGFRxd5kIXy4JKOZAwNe1w0cdc0=
-github.com/xanzy/go-gitlab v0.59.0 h1:fAr6rT/YIdfmBavYgI42+Op7yAAex2Y4xOfvbjN9hxQ=
-github.com/xanzy/go-gitlab v0.59.0/go.mod h1:F0QEXwmqiBUxCgJm8fE9S+1veX4XC9Z4cfaAbqwk4YM=
+github.com/xanzy/go-gitlab v0.60.0 h1:HaIlc14k4t9eJjAhY0Gmq2fBHgKd1MthBn3+vzDtsbA=
+github.com/xanzy/go-gitlab v0.60.0/go.mod h1:F0QEXwmqiBUxCgJm8fE9S+1veX4XC9Z4cfaAbqwk4YM=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
