@@ -1,0 +1,12 @@
+name: Merge dependabot PRs
+
+on:
+  pull_request_target:
+    branches:
+      - master
+    types:
+      - labeled # either "dependencies" is added by dependabot or "auto approve" is added by a user
+
+jobs:
+  call-workflow:
+    uses: Clever/ci-scripts/.github/workflows/reusable-auto-approve-merge.yml@master
