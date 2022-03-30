@@ -1,0 +1,15 @@
+name: Notify CI status
+
+on: status
+
+jobs:
+  call-workflow:
+    if: >-
+      github.event.branches[0].name == 'master' &&
+      (github.event.state == 'error' || github.event.state == 'failure')    
+    uses: Clever/ci-scripts/.github/workflows/reusable-notify-ci-status.yml@master
+    secrets:
+      CIRCLE_CI_INTEGRATIONS_URL: ${{ secrets.CIRCLE_CI_INTEGRATIONS_URL }}
+      CIRCLE_CI_INTEGRATIONS_USERNAME: ${{ secrets.CIRCLE_CI_INTEGRATIONS_USERNAME }}
+      CIRCLE_CI_INTEGRATIONS_PASSWORD: ${{ secrets.CIRCLE_CI_INTEGRATIONS_PASSWORD }}
+      SLACK_BOT_TOKEN: ${{ secrets.DAPPLE_BOT_TOKEN }}
