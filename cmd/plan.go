@@ -19,16 +19,18 @@ var planFlagBranch string
 var planFlagDiff bool
 var planFlagMessage string
 var planFlagParallelism int64
+var planAllowEmptyCommit bool
 
 // TODO: Pass these *not* via globals
 // these variables are set when the cmd starts running
 var (
-	branchName    string
-	commitMessage string
-	changeCmd     string
-	changeCmdArgs []string
-	isSingleRepo  bool
-	showDiff      bool
+	allowEmptyCommit bool
+	branchName       string
+	commitMessage    string
+	changeCmd        string
+	changeCmdArgs    []string
+	isSingleRepo     bool
+	showDiff         bool
 )
 
 var planCmd = &cobra.Command{
@@ -78,6 +80,12 @@ mp plan -b microplaning -m 'microplane fun' -r app-service -- python /absolute/p
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		allowEmptyCommit, err = cmd.Flags().GetBool("allow-empty-commit")
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		log.Printf("planning %d repos with parallelism limit [%d]", len(repos), parallelismLimit)
 		err = parallelizeLimited(repos, planOneRepo, parallelismLimit)
 		if err != nil {
@@ -115,12 +123,13 @@ func planOneRepo(r lib.Repo, ctx context.Context) error {
 
 	// Execute
 	input := plan.Input{
-		RepoName:      r.Name,
-		RepoDir:       cloneOutput.ClonedIntoDir,
-		WorkDir:       planWorkDir,
-		Command:       plan.Command{Path: changeCmd, Args: changeCmdArgs},
-		CommitMessage: commitMessage,
-		BranchName:    branchName,
+		RepoName:         r.Name,
+		RepoDir:          cloneOutput.ClonedIntoDir,
+		WorkDir:          planWorkDir,
+		Command:          plan.Command{Path: changeCmd, Args: changeCmdArgs},
+		CommitMessage:    commitMessage,
+		BranchName:       branchName,
+		AllowEmptyCommit: allowEmptyCommit,
 	}
 	output, err := plan.Plan(ctx, input)
 	if err != nil {
@@ -144,4 +153,5 @@ func init() {
 	planCmd.Flags().BoolVarP(&planFlagDiff, "diff", "d", false, "Show the diffs of the changes made per repo")
 	planCmd.Flags().StringVarP(&planFlagMessage, "message", "m", "", "Commit message")
 	planCmd.Flags().Int64VarP(&planFlagParallelism, "parallelism", "p", defaultParallelism, "Parallelism limit")
+	planCmd.Flags().BoolVarP(&planAllowEmptyCommit, "allow-empty-commit", "e", false, "Commit even if no changes were made")
 }
