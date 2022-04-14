@@ -32,6 +32,8 @@ type Input struct {
 	BranchName string
 	// Whether to display the diff of changes made
 	Diff bool
+	// AllowEmptyCommit is whether to allow an empty commit
+	AllowEmptyCommit bool
 }
 
 // Output for Plan
@@ -61,12 +63,17 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 	}
 
 	// run the change command, git add, and git commit
-	for _, cmd := range []Command{
+	cmds := []Command{
 		input.Command,
-		Command{Path: "git", Args: []string{"checkout", "-b", input.BranchName}},
-		Command{Path: "git", Args: []string{"add", "-A"}},
-		Command{Path: "git", Args: []string{"commit", "-m", input.CommitMessage}},
-	} {
+		{Path: "git", Args: []string{"checkout", "-b", input.BranchName}},
+		{Path: "git", Args: []string{"add", "-A"}},
+	}
+	if input.AllowEmptyCommit {
+		cmds = append(cmds, Command{Path: "git", Args: []string{"commit", "--allow-empty", "-m", input.CommitMessage}})
+	} else {
+		cmds = append(cmds, Command{Path: "git", Args: []string{"commit", "-m", input.CommitMessage}})
+	}
+	for _, cmd := range cmds {
 		execCmd := exec.CommandContext(ctx, cmd.Path, cmd.Args...)
 		execCmd.Dir = planDir
 		// Set MICROPLANE_<X> convenience env vars, for use in user's script
