@@ -79,7 +79,12 @@ func Plan(ctx context.Context, input Input) (Output, error) {
 		// Set MICROPLANE_<X> convenience env vars, for use in user's script
 		execCmd.Env = append(os.Environ(), fmt.Sprintf("MICROPLANE_REPO=%s", input.RepoName))
 		if output, err := execCmd.CombinedOutput(); err != nil {
-			return Output{Success: false}, errors.New(string(output))
+			var exerr *exec.ExitError
+			if errors.As(err, &exerr) {
+				return Output{Success: false}, fmt.Errorf("[%s] %s", exerr, output)
+			} else {
+				return Output{Success: false}, err
+			}
 		}
 	}
 
