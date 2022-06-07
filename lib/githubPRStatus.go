@@ -41,7 +41,7 @@ func GetGithubPRStatus(ctx context.Context, repoLimiter *time.Ticker, repo Repo,
 								State    string
 								Contexts struct {
 									Nodes []struct {
-										__typename    string
+										Typename      string `graphql:"__typename"`
 										StatusContext struct {
 											Context   string
 											TargetURL string
@@ -75,7 +75,7 @@ func GetGithubPRStatus(ctx context.Context, repoLimiter *time.Ticker, repo Repo,
 	var statuses []GithubStatusContext
 
 	for _, status := range lastCommit.Contexts.Nodes {
-		if status.__typename == "StatusContext" {
+		if status.Typename == "StatusContext" {
 			statuses = append(statuses, GithubStatusContext{
 				Context:   status.StatusContext.Context,
 				TargetURL: &status.StatusContext.TargetURL,
