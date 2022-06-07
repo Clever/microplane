@@ -138,15 +138,14 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		}
 	}
 
-	<-repoLimiter.C
-	cs, _, err := client.Repositories.GetCombinedStatus(ctx, input.Repo.Owner, input.Repo.Name, *pr.Head.SHA, nil)
+	cs, err := lib.GetGithubPRStatus(ctx, repoLimiter, input.Repo, *pr.Number)
 	if err != nil {
 		return Output{Success: false}, err
 	}
 
 	var circleCIBuildURL string
 	for _, status := range cs.Statuses {
-		if status.Context != nil && *status.Context == "ci/circleci" && status.TargetURL != nil {
+		if status.Context == "ci/circleci: build" && status.TargetURL != nil {
 			circleCIBuildURL = *status.TargetURL
 			// url has lots of ugly tracking query params, get rid of them
 			if parsedURL, err := url.Parse(circleCIBuildURL); err == nil {
@@ -165,7 +164,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		CommitSHA:                 *pr.Head.SHA,
 		PullRequestNumber:         *pr.Number,
 		PullRequestURL:            *pr.HTMLURL,
-		PullRequestCombinedStatus: *cs.State,
+		PullRequestCombinedStatus: cs.State,
 		PullRequestAssignee:       input.PRAssignee,
 		CircleCIBuildURL:          circleCIBuildURL,
 	}, nil
