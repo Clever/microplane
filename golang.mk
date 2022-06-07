@@ -14,7 +14,7 @@ export TZ=UTC
 GO_BUILD_FLAGS := "-mod=vendor"
 
 # if the gopath includes several directories, use only the first
-GOPATH=$(shell echo $$GOPATH | cut -d: -f1)
+GOPATH=$(shell go env GOPATH | cut -d: -f1)
 
 # This block checks and confirms that the proper Go toolchain version is installed.
 # It uses ^ matching in the semver sense -- you can be ahead by a minor
