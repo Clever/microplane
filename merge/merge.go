@@ -69,16 +69,14 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	}
 
 	// (2) Check commit status
-	<-repoLimiter.C
-	status, _, err := client.Repositories.GetCombinedStatus(ctx, input.Repo.Owner, input.Repo.Name, input.CommitSHA, &github.ListOptions{})
+	status, err := lib.GetGithubPRStatus(ctx, client, repoLimiter, input.Repo, input.PRNumber)
 	if err != nil {
 		return Output{Success: false}, err
 	}
 
 	if input.RequireBuildSuccess {
-		state := status.GetState()
-		if state != "success" {
-			return Output{Success: false}, fmt.Errorf("Build status was not 'success', instead was '%s'. Use --ignore-build-status to override this check.", state)
+		if status.State != "success" {
+			return Output{Success: false}, fmt.Errorf("Build status was not 'success', instead was '%s'. Use --ignore-build-status to override this check.", status.State)
 		}
 	}
 

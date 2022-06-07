@@ -28,15 +28,14 @@ func GithubSyncPush(ctx context.Context, r lib.Repo, po push.Output, repoLimiter
 		return Output{}, err
 	}
 
-	<-repoLimiter.C
-	cs, _, err := client.Repositories.GetCombinedStatus(ctx, r.Owner, r.Name, *pr.Head.SHA, nil)
+	cs, err := lib.GetGithubPRStatus(ctx, client, repoLimiter, r, po.PullRequestNumber)
 	if err != nil {
 		return Output{}, err
 	}
 
 	return Output{
 		CommitSHA:                 *pr.Head.SHA,
-		PullRequestCombinedStatus: *cs.State,
+		PullRequestCombinedStatus: cs.State,
 		MergeCommitSHA:            *pr.MergeCommitSHA,
 		Merged:                    *pr.Merged,
 	}, nil

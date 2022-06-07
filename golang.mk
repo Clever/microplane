@@ -14,7 +14,7 @@ export TZ=UTC
 GO_BUILD_FLAGS := "-mod=vendor"
 
 # if the gopath includes several directories, use only the first
-GOPATH=$(shell echo $$GOPATH | cut -d: -f1)
+GOPATH=$(shell go env GOPATH | cut -d: -f1)
 
 # This block checks and confirms that the proper Go toolchain version is installed.
 # It uses ^ matching in the semver sense -- you can be ahead by a minor
@@ -39,7 +39,7 @@ endef
 # so we're defended against it breaking or changing in the future.
 FGT := $(GOPATH)/bin/fgt
 $(FGT):
-	go get github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
+	go install github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
 
 golang-ensure-curl-installed:
 	@command -v curl >/dev/null 2>&1 || { echo >&2 "curl not installed. Please install curl."; exit 1; }
@@ -49,7 +49,7 @@ golang-ensure-curl-installed:
 # previously passing tests start failing without changing our code.
 GOLINT := $(GOPATH)/bin/golint
 $(GOLINT):
-	go get golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
+	go install golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
 
 # golang-fmt-deps requires the FGT tool for checking output
 golang-fmt-deps: $(FGT)

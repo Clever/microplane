@@ -3,9 +3,11 @@ package lib
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/google/go-github/v35/github"
+	"github.com/hasura/go-graphql-client"
 	"github.com/xanzy/go-gitlab"
 	"golang.org/x/oauth2"
 )
@@ -48,6 +50,19 @@ func (p *Provider) GithubClient(ctx context.Context) (*github.Client, error) {
 		return github.NewEnterpriseClient(p.BackendURL, p.BackendURL, tc)
 	}
 	client := github.NewClient(tc)
+	return client, nil
+}
+
+func (p *Provider) GithubGraphqlClient(ctx context.Context, rest *github.Client) (*graphql.Client, error) {
+	token := os.Getenv("GITHUB_API_TOKEN")
+	if token == "" {
+		return nil, fmt.Errorf("cannot initialize GithubGraphqlClient: GITHUB_API_TOKEN is not set")
+	}
+
+	client := graphql.NewClient(rest.BaseURL.String()+"graphql", nil).
+		WithRequestModifier(func(req *http.Request) {
+			req.Header.Add("Authorization", "Bearer "+token)
+		})
 	return client, nil
 }
 
