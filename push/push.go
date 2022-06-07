@@ -138,7 +138,7 @@ func GithubPush(ctx context.Context, input Input, repoLimiter *time.Ticker, push
 		}
 	}
 
-	cs, err := lib.GetGithubPRStatus(ctx, repoLimiter, input.Repo, *pr.Number)
+	cs, err := lib.GetGithubPRStatus(ctx, client, repoLimiter, input.Repo, *pr.Number)
 	if err != nil {
 		return Output{Success: false}, err
 	}

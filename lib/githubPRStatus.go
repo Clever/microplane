@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-github/v35/github"
 	"github.com/hasura/go-graphql-client"
 )
 
@@ -22,9 +23,9 @@ type GithubPRStatus struct {
 	Statuses []GithubStatusContext
 }
 
-func GetGithubPRStatus(ctx context.Context, repoLimiter *time.Ticker, repo Repo, prNumber int) (GithubPRStatus, error) {
+func GetGithubPRStatus(ctx context.Context, client *github.Client, repoLimiter *time.Ticker, repo Repo, prNumber int) (GithubPRStatus, error) {
 	p := NewProviderFromConfig(repo.ProviderConfig)
-	graphqlClient, err := p.GithubGraphqlClient(ctx)
+	graphqlClient, err := p.GithubGraphqlClient(ctx, client)
 	if err != nil {
 		return GithubPRStatus{}, err
 	}

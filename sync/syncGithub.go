@@ -28,7 +28,7 @@ func GithubSyncPush(ctx context.Context, r lib.Repo, po push.Output, repoLimiter
 		return Output{}, err
 	}
 
-	cs, err := lib.GetGithubPRStatus(ctx, repoLimiter, r, po.PullRequestNumber)
+	cs, err := lib.GetGithubPRStatus(ctx, client, repoLimiter, r, po.PullRequestNumber)
 	if err != nil {
 		return Output{}, err
 	}

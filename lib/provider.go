@@ -53,22 +53,13 @@ func (p *Provider) GithubClient(ctx context.Context) (*github.Client, error) {
 	return client, nil
 }
 
-func (p *Provider) GithubGraphqlClient(ctx context.Context) (*graphql.Client, error) {
-	// validation
-	if p.Backend != "github" {
-		return nil, fmt.Errorf("cannot initialize GithubGraphqlClient: backend is not 'github', but instead is '%s'", p.Backend)
-	}
+func (p *Provider) GithubGraphqlClient(ctx context.Context, rest *github.Client) (*graphql.Client, error) {
 	token := os.Getenv("GITHUB_API_TOKEN")
 	if token == "" {
 		return nil, fmt.Errorf("cannot initialize GithubGraphqlClient: GITHUB_API_TOKEN is not set")
 	}
 
-	url := "https://api.github.com/graphql"
-	if p.IsEnterprise() {
-		url = p.BackendURL
-	}
-
-	client := graphql.NewClient(url, nil).
+	client := graphql.NewClient(rest.BaseURL.String()+"graphql", nil).
 		WithRequestModifier(func(req *http.Request) {
 			req.Header.Add("Authorization", "Bearer "+token)
 		})

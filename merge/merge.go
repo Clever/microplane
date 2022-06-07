@@ -69,7 +69,7 @@ func GitHubMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 	}
 
 	// (2) Check commit status
-	status, err := lib.GetGithubPRStatus(ctx, repoLimiter, input.Repo, input.PRNumber)
+	status, err := lib.GetGithubPRStatus(ctx, client, repoLimiter, input.Repo, input.PRNumber)
 	if err != nil {
 		return Output{Success: false}, err
 	}
