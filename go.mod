@@ -6,7 +6,7 @@ require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
 	github.com/fatih/color v1.13.0
 	github.com/google/go-github/v35 v35.3.0
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/stretchr/testify v1.7.4
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.68.0
@@ -15,7 +15,7 @@ require (
 )
 
 require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
