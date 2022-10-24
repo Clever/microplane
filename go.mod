@@ -7,7 +7,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/google/go-github/v35 v35.3.0
 	github.com/spf13/cobra v1.6.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.73.1
 	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
