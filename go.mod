@@ -9,8 +9,8 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.1
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
-	github.com/xanzy/go-gitlab v0.77.0
-	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
+	github.com/xanzy/go-gitlab v0.78.0
+	golang.org/x/oauth2 v0.3.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 )
 
@@ -32,9 +32,9 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
-	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
