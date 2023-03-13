@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.15.0
 	github.com/google/go-github/v35 v35.3.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.2
