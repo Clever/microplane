@@ -6,7 +6,7 @@ require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
 	github.com/fatih/color v1.15.0
 	github.com/google/go-github/v35 v35.3.0
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.81.0
@@ -24,7 +24,7 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.2 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
