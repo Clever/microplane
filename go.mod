@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
-	github.com/xanzy/go-gitlab v0.81.0
+	github.com/xanzy/go-gitlab v0.82.0
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/sync v0.1.0
 )
@@ -36,7 +36,7 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.29.0 // indirect
+	google.golang.org/protobuf v1.29.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
