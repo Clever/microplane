@@ -11,7 +11,7 @@ require (
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.83.0
 	golang.org/x/oauth2 v0.7.0
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.2.0
 )
 
 require (
