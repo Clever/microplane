@@ -1,7 +1,7 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 1.0.0
+GOLANG_MK_VERSION := 1.2.1
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
@@ -11,7 +11,7 @@ SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
 export TZ=UTC
 
 # go build flags for use across all commands which accept them
-GO_BUILD_FLAGS := "-mod=vendor"
+export GOFLAGS := -mod=vendor $(GOFLAGS)
 
 # if the gopath includes several directories, use only the first
 GOPATH=$(shell echo $$GOPATH | cut -d: -f1)
@@ -39,7 +39,7 @@ endef
 # so we're defended against it breaking or changing in the future.
 FGT := $(GOPATH)/bin/fgt
 $(FGT):
-	go get github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
+	go install -mod=readonly github.com/GeertJohan/fgt@262f7b11eec07dc7b147c44641236f3212fee89d
 
 golang-ensure-curl-installed:
 	@command -v curl >/dev/null 2>&1 || { echo >&2 "curl not installed. Please install curl."; exit 1; }
@@ -47,9 +47,11 @@ golang-ensure-curl-installed:
 # Golint is a tool for linting Golang code for common errors.
 # We pin its version because an update could add a new lint check which would make
 # previously passing tests start failing without changing our code.
+# this package is deprecated and frozen
+# Infra recomendation is to eventaully move to https://github.com/golangci/golangci-lint so don't fail on linting error for now
 GOLINT := $(GOPATH)/bin/golint
 $(GOLINT):
-	go get golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
+	go install -mod=readonly golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626
 
 # golang-fmt-deps requires the FGT tool for checking output
 golang-fmt-deps: $(FGT)
@@ -74,14 +76,6 @@ endef
 # golang-lint-deps-strict requires the golint tool for golang linting.
 golang-lint-deps-strict: $(GOLINT) $(FGT)
 
-# golang-lint-strict calls golint on all golang files in the pkg and fails if any lint
-# errors are found.
-# arg1: pkg path
-define golang-lint-strict
-@echo "LINTING $(1)..."
-@PKG_PATH=$$(go list -f '{{.Dir}}' $(1)); find $${PKG_PATH}/*.go -type f | grep -v gen_ | xargs $(FGT) $(GOLINT)
-endef
-
 # golang-test-deps is here for consistency
 golang-test-deps:
 
@@ -89,7 +83,7 @@ golang-test-deps:
 # arg1: pkg path
 define golang-test
 @echo "TESTING $(1)..."
-@go test $(GO_BUILD_FLAGS) -v $(1)
+@go test -v $(1)
 endef
 
 # golang-test-strict-deps is here for consistency
@@ -99,7 +93,22 @@ golang-test-strict-deps:
 # arg1: pkg path
 define golang-test-strict
 @echo "TESTING $(1)..."
-@go test -v $(GO_BUILD_FLAGS) -race $(1)
+@go test -v -race $(1)
+endef
+
+# golang-test-strict-cover-deps is here for consistency
+golang-test-strict-cover-deps:
+
+# golang-test-strict-cover uses the Go toolchain to run all tests in the pkg with the race and cover flag.
+# appends coverage results to coverage.txt
+# arg1: pkg path
+define golang-test-strict-cover
+@echo "TESTING $(1)..."
+@go test -v -race -cover -coverprofile=profile.tmp -covermode=atomic $(1)
+@if [ -f profile.tmp ]; then \
+  cat profile.tmp | tail -n +2 >> coverage.txt; \
+  rm profile.tmp; \
+fi;
 endef
 
 # golang-vet-deps is here for consistency
@@ -109,7 +118,7 @@ golang-vet-deps:
 # arg1: pkg path
 define golang-vet
 @echo "VETTING $(1)..."
-@go vet $(GO_BUILD_FLAGS) $(1)
+@go vet $(1)
 endef
 
 # golang-test-all-deps installs all dependencies needed for different test cases.
@@ -132,23 +141,40 @@ golang-test-all-strict-deps: golang-fmt-deps golang-lint-deps-strict golang-test
 # arg1: pkg path
 define golang-test-all-strict
 $(call golang-fmt,$(1))
-$(call golang-lint-strict,$(1))
+$(call golang-lint,$(1))
 $(call golang-vet,$(1))
 $(call golang-test-strict,$(1))
+endef
+
+# golang-test-all-strict-cover-deps: installs all dependencies needed for different test cases.
+golang-test-all-strict-cover-deps: golang-fmt-deps golang-lint-deps-strict golang-test-strict-cover-deps golang-vet-deps
+
+# golang-test-all-strict-cover calls fmt, lint, vet and test on the specified pkg with strict and cover
+# requirements that no errors are thrown while linting.
+# arg1: pkg path
+define golang-test-all-strict-cover
+$(call golang-fmt,$(1))
+$(call golang-lint,$(1))
+$(call golang-vet,$(1))
+$(call golang-test-strict-cover,$(1))
 endef
 
 # golang-build: builds a golang binary. ensures CGO build is done during CI. This is needed to make a binary that works with a Docker alpine image.
 # arg1: pkg path
 # arg2: executable name
 define golang-build
-@echo "BUILDING..."
+@echo "BUILDING $(2)..."
 @if [ -z "$$CI" ]; then \
-	go build $(GO_BUILD_FLAGS) -o bin/$(2) $(1); \
+	go build -o bin/$(2) $(1); \
 else \
 	echo "-> Building CGO binary"; \
-	CGO_ENABLED=0 go build $(GO_BUILD_FLAGS) -installsuffix cgo -o bin/$(2) $(1); \
+	CGO_ENABLED=0 go build -installsuffix cgo -o bin/$(2) $(1); \
 fi;
 endef
+
+# golang-setup-coverage: set up the coverage file
+golang-setup-coverage:
+	@echo "mode: atomic" > coverage.txt
 
 # golang-update-makefile downloads latest version of golang.mk
 golang-update-makefile:
