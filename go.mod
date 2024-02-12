@@ -1,6 +1,6 @@
 module github.com/Clever/microplane
 
-go 1.17
+go 1.21
 
 require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
