@@ -109,7 +109,8 @@ func reposFromFile(p *lib.Provider, file string) ([]lib.Repo, error) {
 			// in case file ends with newline, ignore it
 			continue
 		}
-		parts := strings.Split(item, "/")
+		// GitLab may have nested directories
+		parts := strings.SplitN(item, "/", 2)
 		if len(parts) != 2 {
 			return []lib.Repo{}, fmt.Errorf("unable determine repo from line, expected format '{org}/{repo}': %s", item)
 		}
