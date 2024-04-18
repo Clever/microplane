@@ -63,8 +63,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d h1:xQcF7b7cZLWZG/+7A4G7un1qmEDYHIvId9qxRS1mZMs=
 github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d/go.mod h1:BzSc3WEF8R+lCaP5iGFRxd5kIXy4JKOZAwNe1w0cdc0=
-github.com/xanzy/go-gitlab v0.100.0 h1:jaOtYj5nWI19+9oVVmgy233pax2oYqucwetogYU46ks=
-github.com/xanzy/go-gitlab v0.100.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
+github.com/xanzy/go-gitlab v0.103.0 h1:J9pTQoq0GsEFqzd6srCM1QfdfKAxSNz6mT6ntrpNF2w=
+github.com/xanzy/go-gitlab v0.103.0/go.mod h1:ETg8tcj4OhrB84UEgeE8dSuV/0h4BBL1uOV/qK0vlyI=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.19.0 h1:ENy+Az/9Y1vSrlrvBSyna3PITt4tiZLf7sgCjZBX7Wo=
 golang.org/x/crypto v0.19.0/go.mod h1:Iy9bg/ha4yyC70EfRS8jz+B6ybOBKMaSxLj6P6oBDfU=
