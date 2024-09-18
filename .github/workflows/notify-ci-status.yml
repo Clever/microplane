@@ -1,0 +1,20 @@
+name: Notify CI status
+
+on:
+  check_suite:
+    types: [completed]
+  status:
+
+jobs:
+  call-workflow:
+    if: >-
+      (github.event.branches[0].name == github.event.repository.default_branch &&
+        (github.event.state == 'error' || github.event.state == 'failure')) ||
+      (github.event.check_suite.head_branch == github.event.repository.default_branch &&
+        github.event.check_suite.conclusion != 'success')
+    uses: Clever/ci-scripts/.github/workflows/reusable-notify-ci-status.yml@master
+    secrets:
+      CIRCLE_CI_INTEGRATIONS_URL: ${{ secrets.CIRCLE_CI_INTEGRATIONS_URL }}
+      CIRCLE_CI_INTEGRATIONS_USERNAME: ${{ secrets.CIRCLE_CI_INTEGRATIONS_USERNAME }}
+      CIRCLE_CI_INTEGRATIONS_PASSWORD: ${{ secrets.CIRCLE_CI_INTEGRATIONS_PASSWORD }}
+      SLACK_BOT_TOKEN: ${{ secrets.DAPPLE_BOT_TOKEN }}
