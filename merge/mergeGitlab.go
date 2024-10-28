@@ -64,9 +64,9 @@ func GitlabMerge(ctx context.Context, input Input, repoLimiter *time.Ticker, mer
 			return Output{Success: false}, fmt.Errorf("MR is not approved. Review state is %s", mr.State)
 		}
 	}
-	// Try to rebase master if Diverged Commits greates that zero
+	// Try to rebase master if Diverged Commits greater than zero
 	if mr.DivergedCommitsCount > 0 {
-		_, err := client.MergeRequests.RebaseMergeRequest(pid, input.PRNumber, ctxFunc)
+		_, err := client.MergeRequests.RebaseMergeRequest(pid, input.PRNumber, &gitlab.RebaseMergeRequestOptions{}, ctxFunc)
 		if err != nil {
 			return Output{Success: false}, fmt.Errorf("Failed to rebase from master")
 		}
