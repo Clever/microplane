@@ -9,7 +9,7 @@ require (
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.9.0
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
-	github.com/xanzy/go-gitlab v0.113.0
+	github.com/xanzy/go-gitlab v0.114.0
 	golang.org/x/oauth2 v0.24.0
 	golang.org/x/sync v0.9.0
 )
