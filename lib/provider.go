@@ -14,6 +14,7 @@ import (
 type ProviderConfig struct {
 	Backend    string
 	BackendURL string
+	CloneType  string
 }
 
 func (pc ProviderConfig) IsEnterprise() bool {

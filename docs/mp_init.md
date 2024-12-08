@@ -14,8 +14,8 @@ $ mp init -f repos.txt
 
 where repos.txt has lines like:
 
-	clever/repo2
-	clever/repo2
+    clever/repo2
+    clever/repo2
 
 ## (2) Init via Search
 
@@ -73,6 +73,7 @@ mp init [query] [flags]
 
 ```
       --all-repos             get all repos for a given org
+      --clone-type string     'ssh' or 'https' (default "ssh")
   -f, --file string           get repos from a file instead of searching
   -h, --help                  help for init
       --provider string       'github' or 'gitlab' (default "github")
