@@ -1,7 +1,7 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 1.2.1
+GOLANG_MK_VERSION := 1.3.0
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
@@ -159,17 +159,28 @@ $(call golang-vet,$(1))
 $(call golang-test-strict-cover,$(1))
 endef
 
-# golang-build: builds a golang binary. ensures CGO build is done during CI. This is needed to make a binary that works with a Docker alpine image.
+# golang-build: builds a golang binary
 # arg1: pkg path
 # arg2: executable name
 define golang-build
 @echo "BUILDING $(2)..."
-@if [ -z "$$CI" ]; then \
-	go build -o bin/$(2) $(1); \
-else \
-	echo "-> Building CGO binary"; \
-	CGO_ENABLED=0 go build -installsuffix cgo -o bin/$(2) $(1); \
-fi;
+@CGO_ENABLED=0 go build -o bin/$(2) $(1);
+endef
+
+# golang-debug-build: builds a golang binary with debugging capabilities
+# arg1: pkg path
+# arg2: executable name
+define golang-debug-build
+@echo "BUILDING $(2) FOR DEBUG..."
+@CGO_ENABLED=0 go build -gcflags="all=-N -l" -o bin/$(2) $(1);
+endef
+
+# golang-cgo-build: builds a golang binary with CGO
+# arg1: pkg path
+# arg2: executable name
+define golang-cgo-build
+@echo "BUILDING $(2) WITH CGO ..."
+@CGO_ENABLED=1 go build -installsuffix cgo -o bin/$(2) $(1);
 endef
 
 # golang-setup-coverage: set up the coverage file
