@@ -2,6 +2,7 @@ package clone
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
@@ -23,6 +24,10 @@ type Output struct {
 type Error struct {
 	error
 	Details string
+}
+
+func (e Error) Error() string {
+	return fmt.Sprintf("%s:\n%s", e.error.Error(), e.Details)
 }
 
 func Clone(ctx context.Context, input Input) (Output, error) {
