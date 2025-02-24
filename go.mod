@@ -1,6 +1,7 @@
 module github.com/Clever/microplane
 
 go 1.21
+toolchain go1.23.6
 
 require (
 	github.com/facebookgo/errgroup v0.0.0-20160209021148-779c8d7ef069
@@ -10,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/waigani/diffparser v0.0.0-20190828052634-7391f219313d
 	github.com/xanzy/go-gitlab v0.115.0
-	golang.org/x/oauth2 v0.26.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/sync v0.11.0
 )
 
