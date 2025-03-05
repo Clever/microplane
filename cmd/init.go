@@ -89,6 +89,10 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 			query = args[0]
 		}
 
+		if initCloneType != "ssh" && initCloneType != "https" {
+			log.Fatalf("clone-type must be 'ssh' or 'https' but was %s", initCloneType)
+		}
+
 		output, err := initialize.Initialize(initialize.Input{
 			AllRepos:      initAllrepos,
 			Query:         query,
@@ -98,6 +102,7 @@ See https://docs.gitlab.com/ee/user/search/advanced_search_syntax.html for more 
 			ProviderURL:   initProviderURL,
 			ReposFromFile: initFlagReposFile,
 			RepoSearch:    initRepoSearch,
+			CloneType:     initCloneType,
 		})
 		if err != nil {
 			log.Fatal(err)
@@ -119,6 +124,7 @@ var initRepoSearch bool
 var initAllrepos bool
 var initProvider string
 var initProviderURL string
+var initCloneType string
 
 func init() {
 	initCmd.Flags().StringVarP(&initFlagReposFile, "file", "f", "", "get repos from a file instead of searching")
@@ -126,4 +132,5 @@ func init() {
 	initCmd.Flags().BoolVar(&initAllrepos, "all-repos", false, "get all repos for a given org")
 	initCmd.Flags().StringVar(&initProvider, "provider", "github", "'github' or 'gitlab'")
 	initCmd.Flags().StringVar(&initProviderURL, "provider-url", "", "custom URL for enterprise setups")
+	initCmd.Flags().StringVar(&initCloneType, "clone-type", "ssh", "'ssh' or 'https'")
 }
