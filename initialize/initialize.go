@@ -24,6 +24,7 @@ type Input struct {
 	ProviderURL   string
 	ReposFromFile string
 	RepoSearch    bool
+	CloneType     string
 }
 
 // Output for Initialize
@@ -44,6 +45,7 @@ func Initialize(input Input) (Output, error) {
 	p := lib.NewProviderFromConfig(lib.ProviderConfig{
 		Backend:    input.Provider,
 		BackendURL: input.ProviderURL,
+		CloneType:  input.CloneType,
 	})
 
 	var repos []lib.Repo
@@ -264,9 +266,17 @@ func githubAllRepoSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 func getFormattedRepos(p *lib.Provider, allRepos map[string]*github.Repository) []lib.Repo {
 	formattedRepos := []lib.Repo{}
 	for _, r := range allRepos {
+		var url string
+		if p.ProviderConfig.CloneType == "ssh" {
+			url = r.GetSSHURL()
+		} else if p.ProviderConfig.CloneType == "https" {
+			url = r.GetCloneURL()
+		}
+
 		formattedRepos = append(formattedRepos, lib.Repo{
 			Name:           r.GetName(),
 			Owner:          r.Owner.GetLogin(),
+			CloneURL:       url,
 			ProviderConfig: p.ProviderConfig,
 		})
 	}
@@ -310,10 +320,17 @@ func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 					fmt.Println(err)
 				}
 				if _, ok := repoNames[project.Name]; !ok {
+					var url string
+					if p.ProviderConfig.CloneType == "ssh" {
+						url = project.SSHURLToRepo
+					} else if p.ProviderConfig.CloneType == "https" {
+						url = project.HTTPURLToRepo
+					}
+
 					repos = append(repos, lib.Repo{
 						Name:           project.Name,
 						Owner:          project.Namespace.FullPath,
-						CloneURL:       project.SSHURLToRepo,
+						CloneURL:       url,
 						ProviderConfig: p.ProviderConfig,
 					})
 					repoNames[project.Name] = true
@@ -332,10 +349,17 @@ func gitlabSearch(p *lib.Provider, query string) ([]lib.Repo, error) {
 			}
 			for _, project := range projects {
 				if _, ok := repoNames[project.Name]; !ok {
+					var url string
+					if p.ProviderConfig.CloneType == "ssh" {
+						url = project.SSHURLToRepo
+					} else if p.ProviderConfig.CloneType == "https" {
+						url = project.HTTPURLToRepo
+					}
+
 					repos = append(repos, lib.Repo{
 						Name:           project.Name,
 						Owner:          project.Namespace.FullPath,
-						CloneURL:       project.SSHURLToRepo,
+						CloneURL:       url,
 						ProviderConfig: p.ProviderConfig,
 					})
 					repoNames[project.Name] = true
