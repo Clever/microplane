@@ -1,5 +1,11 @@
 # changelog
 
+2025-04-16 - v0.0.36
+
+- Chore - Updates dependency libraries
+- Fixes - Git clone errors are more detailed
+- Adds - support for HTTPS cloning
+
 2021-08-16 - v0.0.34
 
 - Changes - use the default branch as the Gitlab PR target
