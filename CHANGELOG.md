@@ -4,6 +4,7 @@
 
 - Chore - Updates dependency libraries
 - Fixes - Git clone errors are more detailed
+- Adds support for HTTPS cloning
 
 2021-08-16 - v0.0.34
 
