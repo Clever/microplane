@@ -1,7 +1,7 @@
 # This is the default Clever Golang Makefile.
 # It is stored in the dev-handbook repo, github.com/Clever/dev-handbook
 # Please do not alter this file directly.
-GOLANG_MK_VERSION := 1.3.0
+GOLANG_MK_VERSION := 1.3.1
 
 SHELL := /bin/bash
 SYSTEM := $(shell uname -a | cut -d" " -f1 | tr '[:upper:]' '[:lower:]')
@@ -48,7 +48,7 @@ golang-ensure-curl-installed:
 # We pin its version because an update could add a new lint check which would make
 # previously passing tests start failing without changing our code.
 # this package is deprecated and frozen
-# Infra recomendation is to eventaully move to https://github.com/golangci/golangci-lint so don't fail on linting error for now
+# Infra recommendation is to eventually move to https://github.com/golangci/golangci-lint so don't fail on linting error for now
 GOLINT := $(GOPATH)/bin/golint
 $(GOLINT):
 	go install -mod=readonly golang.org/x/lint/golint@738671d3881b9731cc63024d5d88cf28db875626

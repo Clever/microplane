@@ -1,6 +1,7 @@
 module github.com/Clever/microplane
 
-go 1.21
+go 1.24
+
 toolchain go1.24.1
 
 require (
