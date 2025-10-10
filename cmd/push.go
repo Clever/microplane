@@ -21,6 +21,7 @@ var pushFlagThrottle string
 var pushFlagBodyFile string
 var pushFlagLabels []string
 var pushFlagDraft bool
+var pushFlagPlannedOnly bool
 
 // rate limits the # of git pushes. used to prevent load on CI system
 var pushThrottle *time.Ticker
@@ -29,6 +30,7 @@ var prAssignee string
 var prBody string
 var prLabels []string
 var prDraft bool
+var prPlannedOnly bool
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
@@ -83,6 +85,12 @@ var pushCmd = &cobra.Command{
 		}
 		prDraft = draft
 
+		plannedOnly, err := cmd.Flags().GetBool("planned-only")
+		if err != nil {
+			log.Fatal(err)
+		}
+		prPlannedOnly = plannedOnly
+
 		repos, err := whichRepos(cmd)
 		if err != nil {
 			log.Fatal(err)
@@ -112,6 +120,18 @@ func pushOneRepo(r lib.Repo, ctx context.Context) error {
 	if loadJSON(outputPath(r.Name, "merge"), &mergeOutput) == nil && mergeOutput.Success {
 		log.Printf("%s/%s - already merged", r.Owner, r.Name)
 		return nil
+	}
+
+	// Exit early if already pushed and --planned-only flag is used
+	if prPlannedOnly {
+		var pushOutput struct {
+			push.Output
+			Error string
+		}
+		if loadJSON(outputPath(r.Name, "push"), &pushOutput) == nil && pushOutput.Success {
+			log.Printf("%s/%s - already pushed (skipping due to --planned-only)", r.Owner, r.Name)
+			return nil
+		}
 	}
 
 	// Get previous step's output
@@ -165,4 +185,5 @@ func init() {
 	pushCmd.Flags().StringVarP(&pushFlagBodyFile, "body-file", "b", "", "body of PR")
 	pushCmd.Flags().StringSliceVarP(&pushFlagLabels, "labels", "l", nil, "labels to attach to PR. for example: `-l 'first label' -l 'second label'`")
 	pushCmd.Flags().BoolVarP(&pushFlagDraft, "draft", "d", false, "push a draft pull request (only supported for github)")
+	pushCmd.Flags().BoolVarP(&pushFlagPlannedOnly, "planned-only", "p", false, "only push repositories that are in planned state (skip already pushed)")
 }
