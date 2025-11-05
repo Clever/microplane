@@ -3,23 +3,24 @@ jobs:
   build:
     working_directory: ~/go/src/github.com/Clever/microplane
     docker:
-    - image: cimg/go:1.24
+      - image: cimg/go:1.24
     environment:
       CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
       CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
     steps:
-    - run:
-        command: cd $HOME && git clone --depth 1 -v https://github.com/Clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
-        name: Clone ci-scripts
-    - checkout
-    - run:
-        command: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-        name: Set up CircleCI artifacts directories
-    - run: make install_deps
-    - run: make build
-    - run:
-        command: make test
-        environment:
-          GITHUB_API_TOKEN: x
-          GITLAB_API_TOKEN: ""
-    - run: if [ "${CIRCLE_BRANCH}" == "master" ]; then make release && $HOME/ci-scripts/circleci/github-release $GH_RELEASE_TOKEN release; fi;
+      - run:
+          command: cd $HOME && git clone --depth 1 -v https://github.com/Clever/ci-scripts.git && cd ci-scripts && git show --oneline -s
+          name: Clone ci-scripts
+      - checkout
+      - run:
+          command: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
+          name: Set up CircleCI artifacts directories
+      - run: make install_deps
+      - run: make build
+      - run:
+          command: make test
+          environment:
+            GITHUB_API_TOKEN: x
+            GITLAB_API_TOKEN: ""
+      - run: if [ "${CIRCLE_BRANCH}" == "master" ]; then make release && $HOME/ci-scripts/circleci/github-release $GH_RELEASE_TOKEN release; fi;
+      - run: $HOME/ci-scripts/circleci/catalog-sync $CATAPULT_URL $CATAPULT_USER $CATAPULT_PASS microplane utility
